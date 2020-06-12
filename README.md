@@ -1,5 +1,7 @@
-# gcru
-Google Container Registry Updater - you give it a image reference, it will resolve it to an image digest. It can then find references to the container image in source code and update it in-place with the new digest.
+# CRU
+Container Reference Updater - you give it a image reference, it will resolve it to an image digest. It can then find references to the container image in source code and update it in-place with the new digest.
+
+It has no dependeny on Docker and it currently only supports the gcr.io registry - it might be extended to other registries later. 
 
 ## Image Digests
 You should be using image digests to refer to container images. 
@@ -14,7 +16,7 @@ This is why:
 ## Usage
 Search for image references in the current directory
 ```
-$: gcru list .
+$: cru list .
 IMAGE                        NEEDS UPDATE  LATEST DIGEST
 gcr.io/my-project/my-app     yes           sha256:70d23423bdb3e4e63255cf62747b5cbfce53210778ca2fc3a2544595a0fce3c6
 gcr.io/my-project/my-worker  no            sha256:2a2df1d263e73f6a2cc16a9e4aefe8b44563b74d2f1dca067ba167da1198216c
@@ -22,7 +24,7 @@ gcr.io/my-project/my-worker  no            sha256:2a2df1d263e73f6a2cc16a9e4aefe8
 
 Update all image references in the current directory to latest
 ```
-$: gcru update .
+$: cru update .
 Resolved digest gcr.io/my-project/my-app@sha256:70d23423bdb3e4e63255cf62747b5cbfce53210778ca2fc3a2544595a0fce3c6
 Updated 1 file(s)
 Resolved digest gcr.io/my-project/my-worker@sha256:2a2df1d263e73f6a2cc16a9e4aefe8b44563b74d2f1dca067ba167da1198216c
@@ -31,14 +33,14 @@ Updated 2 file(s)
 
 Update a specific image reference, resolving the tag. This tool will *always* overwrite the current tag or digest in an image reference. 
 ```
-$: gcru update -i gcr.io/my-project/my-app:v1.2 .
+$: cru update -i gcr.io/my-project/my-app:v1.2 .
 gcr.io/my-project/my-app@sha256:9550c0b587e1e07fda5a7bd210a44d868f038944a86fe77673ea613d57d62ef9
 Updated 1 file(s)
 ``` 
 
 You can also use it as a glorified regex, just replacing a image reference with what you supply on the command line. 
 ```
-$: gcru update -i gcr.io/my-project/my-app:v1.2 --no-resolve
+$: cru update -i gcr.io/my-project/my-app:v1.2 --no-resolve .
 gcr.io/my-project/my-app:v1.2
 Updated 1 file(s)
 ``` 
@@ -46,12 +48,12 @@ Updated 1 file(s)
 
 Update all image references in files in the current directory ending with .tf
 ```
-gcru update *.tf
+cru update *.tf
 ```
 
 Update files all image references in *.tf files recursively
 ```
-find . -iname "*.tf" | xargs gcru update
+find . -iname "*.tf" | xargs cru update
 ```
 
 ## Use Cases
