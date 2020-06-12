@@ -32,9 +32,17 @@ Updated 2 file(s)
 Update a specific image reference, resolving the tag. This tool will *always* overwrite the current tag or digest in an image reference. 
 ```
 $: gcru update -i gcr.io/my-project/my-app:v1.2 .
-Resolved digest gcr.io/my-project/my-app@sha256:9550c0b587e1e07fda5a7bd210a44d868f038944a86fe77673ea613d57d62ef9
+gcr.io/my-project/my-app@sha256:9550c0b587e1e07fda5a7bd210a44d868f038944a86fe77673ea613d57d62ef9
 Updated 1 file(s)
 ``` 
+
+You can also use it as a glorified regex, just replacing a image reference with what you supply on the command line. 
+```
+$: gcru update -i gcr.io/my-project/my-app:v1.2 --no-resolve
+gcr.io/my-project/my-app:v1.2
+Updated 1 file(s)
+``` 
+
 
 Update all image references in files in the current directory ending with .tf
 ```
@@ -47,4 +55,4 @@ find . -iname "*.tf" | xargs gcru update
 ```
 
 ## Use Cases
-Keeping Kubernetes manifests, Terraform configuration files, or Dockerfiles up to date. This tool can also be used to practice a GitOps-style workflow.
+Keeping Kubernetes manifests, Terraform configuration files, or Dockerfiles up to date. This tool can also be used to practice a GitOps-style workflow with declarative releases. 
