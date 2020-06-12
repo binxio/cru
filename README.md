@@ -38,13 +38,12 @@ gcr.io/my-project/my-app@sha256:9550c0b587e1e07fda5a7bd210a44d868f038944a86fe776
 Updated 1 file(s)
 ``` 
 
-You can also use it as a glorified regex, just replacing a image reference with what you supply on the command line. 
+You can also use it as a glorified regex, just replacing a tag. 
 ```
 $: cru update -i gcr.io/my-project/my-app:v1.2 --no-resolve .
 gcr.io/my-project/my-app:v1.2
 Updated 1 file(s)
 ``` 
-
 
 Update all image references in files in the current directory ending with .tf
 ```
