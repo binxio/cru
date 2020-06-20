@@ -16,7 +16,11 @@ func list_references(filename string) error {
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
-	log.Printf("reading %d bytes from %s\n", len(content), filename)
+
+	for _, ref := range FindAllContainerImageReference(content) {
+		fmt.Printf("%s: %s\n", filename, ref)
+	}
+
 	return nil
 }
 
