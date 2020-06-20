@@ -11,20 +11,24 @@ import (
 	"path/filepath"
 )
 
-func list_references(filename string) error {
+func list_references(filename string, print_filenames bool) error {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
 
 	for _, ref := range FindAllContainerImageReference(content) {
-		fmt.Printf("%s: %s\n", filename, ref)
+		if print_filenames {
+			fmt.Printf("%s: %s\n", filename, ref)
+		} else {
+			fmt.Printf("%s\n", ref)
+		}
 	}
 
 	return nil
 }
 
-func list(paths []string) error {
+func list(paths []string, print_filenames bool) error {
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		if err != nil {
@@ -37,7 +41,7 @@ func list(paths []string) error {
 						return err
 					}
 					if util.IsTextFile(vfs.OS(filepath.Dir(p)), filepath.Base(p)) {
-						list_references(p)
+						list_references(p, print_filenames)
 					}
 					return nil
 				})
@@ -49,7 +53,7 @@ func list(paths []string) error {
 			if !util.IsTextFile(vfs.OS(filepath.Dir(path)), filepath.Base(path)) {
 				return fmt.Errorf("%s is not a text file", path)
 			}
-			list_references(path)
+			list_references(path, print_filenames)
 		}
 	}
 	return nil
@@ -59,7 +63,7 @@ func main() {
 	usage := `cru - container image reference updater
 
 Usage:
-  cru list [PATH] ...
+  cru list [--no-filename] [PATH] ...
   cru -h | --help
 
 Options:
@@ -72,6 +76,6 @@ Options:
 		if len(paths) == 0 {
 			paths = append(paths, ".")
 		}
-		list(paths)
+		list(paths, !args["--no-filename"].(bool))
 	}
 }
