@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"log"
 	"regexp"
 	"sort"
@@ -107,6 +110,24 @@ func Unique(refs []ContainerImageReference) []ContainerImageReference {
 		}
 	}
 	return result
+}
+
+func (r ContainerImageReference) ResolveToDigest() (*ContainerImageReference, error) {
+	ref, err := name.ParseReference(r.String())
+	if err != nil {
+		return nil, err
+	}
+
+	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	if err != nil {
+		return nil, err
+	}
+	digest, err := img.Digest()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get digest for %s, %s", r, err)
+	}
+
+	return &ContainerImageReference{name: r.name, tag: "", digest: digest.String()}, nil
 }
 
 type ContainerImageReferences []ContainerImageReference
