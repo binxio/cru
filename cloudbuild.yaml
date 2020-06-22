@@ -1,12 +1,9 @@
 steps:
   - name: gcr.io/cloud-builders/docker
-    args: [ 'build',
-            '-t',
-            'gcr.io/$PROJECT_ID/cru:$SHORT_SHA',
-            '.']
+    entrypoint: ['/bin/bash', '-c']
+    args: 'build -t gcr.io/$PROJECT_ID/cru:$SHORT_SHA .'
   - name: gcr.io/cloud-builders/docker
-    args:
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/cru:${TAG_NAME}'
-      - .
+    entrypoint: ['/bin/bash', '-c']
+    args: 'build -t gcr.io/$PROJECT_ID/cru:${TAG_NAME:-latest} .'
+    env:
+      TAG_NAME: $TAG_NAME
