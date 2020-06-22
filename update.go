@@ -62,7 +62,7 @@ func updateFile(filename string, references []ContainerImageReference, dryRun bo
 	return nil
 }
 
-func update(paths []string, references []ContainerImageReference, noResolve bool, dryRun bool) error {
+func update(paths []string, references []ContainerImageReference, resolveLatest bool, dryRun bool) error {
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		if err != nil {

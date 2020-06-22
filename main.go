@@ -11,7 +11,7 @@ func main() {
 
 Usage:
   cru list [--no-filename] [PATH] ...
-  cru update [--dry-run] [--no-resolve] [--image-reference=REFERENCE] ... [PATH] ...
+  cru update [--dry-run] [--resolve-latest] [--image-reference=REFERENCE] ... [PATH] ...
   cru -h | --help
 
 Options:
@@ -42,10 +42,10 @@ Options:
 	if args["list"].(bool) {
 		list(paths, !args["--no-filename"].(bool))
 	} else if args["update"].(bool) {
-		noResolve := args["--no-resolve"].(bool)
-		if !noResolve {
-			log.Fatal("dynamic resolve not yet supported, please specify --no-resolve")
+		resolveLatest := args["--resolve-latest"].(bool)
+		if resolveLatest {
+			log.Fatal("--resolve-latest not yet supported")
 		}
-		update(paths, references, args["--no-resolve"].(bool), args["--dry-run"].(bool))
+		update(paths, references, !args["--resolve-latest"].(bool), args["--dry-run"].(bool))
 	}
 }
