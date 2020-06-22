@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/go-containerregistry/pkg/crane"
+	"log"
 	"regexp"
 	"sort"
 	"strings"
@@ -43,6 +45,13 @@ func NewContainerImageReference(original string) (*ContainerImageReference, erro
 
 	return &result, nil
 }
+func MustNewContainerImageReference(original string) *ContainerImageReference {
+	r, err := NewContainerImageReference(original)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return r
+}
 
 func (r ContainerImageReference) String() string {
 	builder := strings.Builder{}
@@ -69,10 +78,26 @@ func FindAllContainerImageReference(content []byte) []ContainerImageReference {
 		}
 	}
 	sort.Sort(ContainerImageReferences(result))
-	return unique(result)
+	return Unique(result)
 }
 
-func unique(refs []ContainerImageReference) []ContainerImageReference {
+func (r ContainerImageReference) SameRepository(o ContainerImageReference) bool {
+	return r.name == o.name
+}
+
+func (a ContainerImageReference) Compare(b ContainerImageReference) int {
+	return strings.Compare(a.String(), b.String())
+}
+
+func (r ContainerImageReference) FindLatest() (ContainerImageReference, error) {
+	tags, err := crane.ListTags(r.name)
+	if err == nil {
+		fmt.Println(tags)
+	}
+	return r, nil
+}
+
+func Unique(refs []ContainerImageReference) []ContainerImageReference {
 	keys := make(map[string]bool)
 	result := []ContainerImageReference{}
 	for _, ref := range refs {
@@ -88,4 +113,4 @@ type ContainerImageReferences []ContainerImageReference
 
 func (a ContainerImageReferences) Len() int           { return len(a) }
 func (a ContainerImageReferences) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ContainerImageReferences) Less(i, j int) bool { return a[i].String() < a[j].String() }
+func (a ContainerImageReferences) Less(i, j int) bool { return (a[i]).Compare(a[j]) < 0 }
