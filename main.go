@@ -42,6 +42,10 @@ Options:
 	if args["list"].(bool) {
 		list(paths, !args["--no-filename"].(bool))
 	} else if args["update"].(bool) {
+		noResolve := args["--no-resolve"].(bool)
+		if !noResolve {
+			log.Fatal("dynamic resolve not yet supported, please specify --no-resolve")
+		}
 		update(paths, references, args["--no-resolve"].(bool), args["--dry-run"].(bool))
 	}
 }
