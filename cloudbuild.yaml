@@ -7,4 +7,4 @@ steps:
          docker tag -t gcr.io/$PROJECT_ID/cru:$SHORT_SHA gcr.io/$PROJECT_ID/cru:${TAG_NAME:-latest} &&
          docker push gcr.io/$PROJECT_ID/cru:${TAG_NAME:-latest}'
 images:
-  - gcr.io/$PROJECT_ID/cru:$SHORT_SHA
+  - 'gcr.io/$PROJECT_ID/cru'
