@@ -85,7 +85,6 @@ func update(paths []string, references []ContainerImageReference, dryRun bool) e
 				return err
 			}
 		} else {
-			log.Println(path)
 			if !util.IsTextFile(vfs.OS(filepath.Dir(path)), filepath.Base(path)) {
 				return fmt.Errorf("%s is not a text file", path)
 			}
