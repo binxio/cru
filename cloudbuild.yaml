@@ -5,5 +5,7 @@ steps:
       - -c
       - 'docker build -t gcr.io/$PROJECT_ID/cru:$SHORT_SHA . &&
          docker tag gcr.io/$PROJECT_ID/cru:$SHORT_SHA gcr.io/$PROJECT_ID/cru:${TAG_NAME:-latest}'
+    env:
+      - TAG_NAME=$TAG_NAME
 images:
   - 'gcr.io/$PROJECT_ID/cru'
