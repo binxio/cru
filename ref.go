@@ -130,6 +130,18 @@ func (r ContainerImageReference) ResolveToDigest() (*ContainerImageReference, er
 	return &ContainerImageReference{name: r.name, tag: "", digest: digest.String()}, nil
 }
 
+func (a ContainerImageReferences) ResolveToDigest() (ContainerImageReferences, error) {
+	result := make([]ContainerImageReference, 0, a.Len())
+	for _, r := range a {
+		rr, err := r.ResolveToDigest()
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *rr)
+	}
+	return result, nil
+}
+
 type ContainerImageReferences []ContainerImageReference
 
 func (a ContainerImageReferences) Len() int           { return len(a) }

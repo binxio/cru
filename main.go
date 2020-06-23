@@ -21,7 +21,7 @@ Options:
 
 	args, _ := docopt.ParseDoc(usage)
 	paths := args["PATH"].([]string)
-	references := make([]ContainerImageReference, 0)
+	references := make(ContainerImageReferences, 0)
 	if len(paths) == 0 {
 		paths = append(paths, ".")
 	}
@@ -39,13 +39,18 @@ Options:
 		references = append(references, *r)
 	}
 
+	resolveLatest := args["--resolve-latest"].(bool)
+	if resolveLatest {
+		var err error
+		references, err = references.ResolveToDigest()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	if args["list"].(bool) {
 		list(paths, !args["--no-filename"].(bool))
 	} else if args["update"].(bool) {
-		resolveLatest := args["--resolve-latest"].(bool)
-		if resolveLatest {
-			log.Fatal("--resolve-latest not yet supported")
-		}
 		update(paths, references, !args["--resolve-latest"].(bool), args["--dry-run"].(bool))
 	}
 }
