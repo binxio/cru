@@ -1,59 +1,40 @@
 # CRU
-Container Reference Updater - you give it a image reference, it will resolve it to an image digest. It can then find references to the container image in source code and update it in-place with the new digest.
+Container Reference Updater - updates container image references 
 
-It has no dependeny on Docker and it currently only supports the gcr.io registry - it might be extended to other registries later. 
-
-## Image Digests
-You should be using image digests to refer to container images. 
-
-Instead of `gcr.io/my-project/my-app:v1.2`, use `gcr.io/my-project/my-app@sha256:9550c0b587e1e07fda5a7bd210a44d868f038944a86fe77673ea613d57d62ef9`
-
-This is why:
-
- - An image digest is a content hash. When you pull a container using an image digest you will automatically verify the image.
- - Content hashes always point to the same image. This improves cacheability and helps to avoid broken builds. Tags are mutable. This is particularly true for the tag `latest`.
+Update kubernetes manifests, Terraform configuration files, or any other infrastructural 
+with the latest container image reference. 
 
 ## Usage
 Search for image references in the current directory
 ```
 $: cru list .
-IMAGE                        NEEDS UPDATE  LATEST DIGEST
-gcr.io/my-project/my-app     yes           sha256:70d23423bdb3e4e63255cf62747b5cbfce53210778ca2fc3a2544595a0fce3c6
-gcr.io/my-project/my-worker  no            sha256:2a2df1d263e73f6a2cc16a9e4aefe8b44563b74d2f1dca067ba167da1198216c
+README.md: eu.gcr.io/binxio/paas-monitor:v0.3.1
+README.md: eu.gcr.io/binxio/paas-monitor:v0.3.2
+README.md: eu.gcr.io/binxio/paas-monitor:v1.0.0
+README.md: gcr.io/my-project/my-app:v1.2
+README.md: gcr.io/my-project/my-app@sha256:70d23423bdb3e4e63255cf62747b5cbfce53210778ca2fc3a2544595a0fce3c6
+README.md: gcr.io/my-project/my-app@sha256:9550c0b587e1e07fda5a7bd210a44d868f038944a86fe77673ea613d57d62ef9
+README.md: gcr.io/my-project/my-worker@sha256:2a2df1d263e73f6a2cc16a9e4aefe8b44563b74d2f1dca067ba167da1198216c
+list_test.go: gcr.io/binxio/paas-monitor:v0.3.1
+update_test.go: gcr.io/binxio/paas-monitor:v0.3.1
+update_test.go: gcr.io/binxio/paas-monitor:v0.3.2
+update_test.go: gcr.io/binxio/paas-monitor:v1.0.0
 ``` 
 
-Update all image references in the current directory to latest
+Update all image references of eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 
 ```
-$: cru update .
-Resolved digest gcr.io/my-project/my-app@sha256:70d23423bdb3e4e63255cf62747b5cbfce53210778ca2fc3a2544595a0fce3c6
-Updated 1 file(s)
-Resolved digest gcr.io/my-project/my-worker@sha256:2a2df1d263e73f6a2cc16a9e4aefe8b44563b74d2f1dca067ba167da1198216c
-Updated 2 file(s)
+$ cru update --image-reference eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 update_test.go
+2020/06/23 13:19:11 INFO: updating update_test.go
 ``` 
 
-Update a specific image reference, resolving the tag. This tool will *always* overwrite the current tag or digest in an image reference. 
+Update a specific image reference with the exact digest, add `--resolve-digest`: 
 ```
-$: cru update -i gcr.io/my-project/my-app:v1.2 .
-gcr.io/my-project/my-app@sha256:9550c0b587e1e07fda5a7bd210a44d868f038944a86fe77673ea613d57d62ef9
-Updated 1 file(s)
+$ cru update --resolve-digest --image-reference gcr.io/binx-io-public/paas-monitor:v3.2.4-5-g49d6871 update_test.go
+2020/06/23 13:29:53 resolving repository gcr.io/binx-io-public/paas-monitor tag v3.2.4-5-g49d6871 to digest sha256:39af528cdc113845360cefa8ac84c653e7d512e3e2fd2f1506fa5e02ee88bda0
+2020/06/23 13:29:53 INFO: updating update_test.go
 ``` 
-
-You can also use it as a glorified regex, just replacing a tag. 
+If you want the image tag back:
 ```
-$: cru update -i gcr.io/my-project/my-app:v1.2 --no-resolve .
-gcr.io/my-project/my-app:v1.2
-Updated 1 file(s)
+$ cru update --image-reference gcr.io/binx-io-public/paas-monitor:v3.2.4-5-g49d6871 update_test.go
+2020/06/23 13:31:53 INFO: updating update_test.go
 ``` 
-
-Update all image references in files in the current directory ending with .tf
-```
-cru update *.tf
-```
-
-Update files all image references in *.tf files recursively
-```
-find . -iname "*.tf" | xargs cru update
-```
-
-## Use Cases
-Keeping Kubernetes manifests, Terraform configuration files, or Dockerfiles up to date. This tool can also be used to practice a GitOps-style workflow with declarative releases. 
