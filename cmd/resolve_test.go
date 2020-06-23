@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"github.com/google/go-containerregistry/pkg/authn"

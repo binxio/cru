@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/binxio/cru/cmd"
 	"github.com/docopt/docopt-go"
 	"log"
 	"os"
@@ -15,13 +16,17 @@ Usage:
   cru -h | --help
 
 Options:
-  list - image references in the specified files and directories
-  -h --help     Show this screen.
+  list 				- image references in the specified files and directories 
+  update 			- update image references in the specified files and directories
+  --dry-run 		- pretent to update the references
+  --resolve-digest 	- change the image reference tag to a reference of the digest of the image
+  --image-reference - image reference to update
+  -h --help    		- show this screen.
 `
 
 	args, _ := docopt.ParseDoc(usage)
 	paths := args["PATH"].([]string)
-	references := make(ContainerImageReferences, 0)
+	references := make(cmd.ContainerImageReferences, 0)
 	if len(paths) == 0 {
 		paths = append(paths, ".")
 	}
@@ -32,7 +37,7 @@ Options:
 	}
 
 	for _, ref := range args["--image-reference"].([]string) {
-		r, err := NewContainerImageReference(ref)
+		r, err := cmd.NewContainerImageReference(ref)
 		if err != nil {
 			log.Fatalf("ERROR: %s", err)
 		}
@@ -49,8 +54,8 @@ Options:
 	}
 
 	if args["list"].(bool) {
-		list(paths, !args["--no-filename"].(bool))
+		cmd.List(paths, !args["--no-filename"].(bool))
 	} else if args["update"].(bool) {
-		update(paths, references, args["--dry-run"].(bool))
+		cmd.Update(paths, references, args["--dry-run"].(bool))
 	}
 }

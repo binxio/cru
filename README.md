@@ -5,6 +5,19 @@ Update kubernetes manifests, Terraform configuration files, or any other infrast
 with the latest container image reference. 
 
 ## Usage
+```
+  cru list [--no-filename] [PATH] ...
+  cru update [--dry-run] [--resolve-digest] [--image-reference=REFERENCE] ... [PATH] ...
+  cru -h | --help
+```
+### Options
+```
+   list - image references in the specified files and directories
+  -h --help     Show this screen.
+ 
+
+
+## Usage
 Search for image references in the current directory
 ```
 $: cru list .

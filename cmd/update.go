@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bytes"
@@ -64,7 +64,7 @@ func updateFile(filename string, references []ContainerImageReference, dryRun bo
 	return nil
 }
 
-func update(paths []string, references []ContainerImageReference, dryRun bool) error {
+func Update(paths []string, references []ContainerImageReference, dryRun bool) error {
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		if err != nil {

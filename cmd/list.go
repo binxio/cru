@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ func listReferences(filename string, print_filenames bool) error {
 	return nil
 }
 
-func list(paths []string, print_filenames bool) error {
+func List(paths []string, print_filenames bool) error {
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		if err != nil {
