@@ -6,18 +6,21 @@ with the latest container image reference.
 
 ## Usage
 ```
-  cru list [--no-filename] [PATH] ...
-  cru update [--dry-run] [--resolve-digest] [--image-reference=REFERENCE] ... [PATH] ...
-  cru -h | --help
+cru list [--no-filename] [PATH] ...
+cru update [--dry-run] [--resolve-digest] [--image-reference=REFERENCE] ... [PATH] ...
+cru -h | --help
+
 ```
-### Options
+## Options
 ```
-   list - image references in the specified files and directories
-  -h --help     Show this screen.
- 
+ --no-filename        do not print the filename.
+ --resolve-digest     change the image reference tag to a reference of the digest of the image.
+ --image-reference=REFERENCE to update.
+ --dry-run            pretend to run the update, make no changes.
+```
 
 
-## Usage
+## Examples
 Search for image references in the current directory
 ```
 $: cru list .
@@ -34,7 +37,7 @@ update_test.go: gcr.io/binxio/paas-monitor:v0.3.2
 update_test.go: gcr.io/binxio/paas-monitor:v1.0.0
 ``` 
 
-Update all image references of eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 
+Update all image references of eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 in the file update_test.go:
 ```
 $ cru update --image-reference eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 update_test.go
 2020/06/23 13:19:11 INFO: updating update_test.go

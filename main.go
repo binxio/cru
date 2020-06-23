@@ -16,15 +16,16 @@ Usage:
   cru -h | --help
 
 Options:
-  list 				- image references in the specified files and directories 
-  update 			- update image references in the specified files and directories
-  --dry-run 		- pretent to update the references
-  --resolve-digest 	- change the image reference tag to a reference of the digest of the image
-  --image-reference - image reference to update
-  -h --help    		- show this screen.
+--no-filename	    do not print the filename.
+--resolve-digest 	change the image reference tag to a reference of the digest of the image.
+--image-reference=REFERENCE to update.
+--dry-run			pretend to run the update, make no changes.
 `
 
-	args, _ := docopt.ParseDoc(usage)
+	args, err := docopt.ParseDoc(usage)
+	if err != nil {
+		log.Fatal(err)
+	}
 	paths := args["PATH"].([]string)
 	references := make(cmd.ContainerImageReferences, 0)
 	if len(paths) == 0 {
