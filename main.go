@@ -11,7 +11,7 @@ func main() {
 
 Usage:
   cru list [--no-filename] [PATH] ...
-  cru update [--dry-run] [--resolve-latest] [--image-reference=REFERENCE] ... [PATH] ...
+  cru update [--dry-run] [--resolve-digest] [--image-reference=REFERENCE] ... [PATH] ...
   cru -h | --help
 
 Options:
@@ -39,7 +39,7 @@ Options:
 		references = append(references, *r)
 	}
 
-	resolveLatest := args["--resolve-latest"].(bool)
+	resolveLatest := args["--resolve-digest"].(bool)
 	if resolveLatest {
 		var err error
 		references, err = references.ResolveToDigest()
@@ -51,6 +51,6 @@ Options:
 	if args["list"].(bool) {
 		list(paths, !args["--no-filename"].(bool))
 	} else if args["update"].(bool) {
-		update(paths, references, !args["--resolve-latest"].(bool), args["--dry-run"].(bool))
+		update(paths, references, args["--dry-run"].(bool))
 	}
 }
