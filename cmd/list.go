@@ -9,28 +9,20 @@ import (
 	"path/filepath"
 )
 
-func listReferences(filename string, print_filenames bool) error {
+func searchReferences(filename string) (ContainerImageReferences, error) {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return fmt.Errorf("could not read %s, %s", filename, err)
+		return nil, fmt.Errorf("could not read %s, %s", filename, err)
 	}
-
-	for _, ref := range FindAllContainerImageReference(content) {
-		if print_filenames {
-			fmt.Printf("%s: %s\n", filename, ref)
-		} else {
-			fmt.Printf("%s\n", ref)
-		}
-	}
-
-	return nil
+	return FindAllContainerImageReference(content), nil
 }
 
-func List(paths []string, print_filenames bool) error {
+func SearchAllReferences(paths []string) (ContainerImageReferenceMap, error) {
+	result := make(map[string]ContainerImageReferences)
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		if err != nil {
-			return fmt.Errorf("%s is not a valid path or is not readable, %s", path, err)
+			return nil, fmt.Errorf("%s is not a valid path or is not readable, %s", path, err)
 		}
 		if info.IsDir() {
 			err := filepath.Walk(path,
@@ -39,19 +31,55 @@ func List(paths []string, print_filenames bool) error {
 						return err
 					}
 					if util.IsTextFile(vfs.OS(filepath.Dir(p)), filepath.Base(p)) {
-						listReferences(p, print_filenames)
+						refs, err := searchReferences(p)
+						if err != nil {
+							return err
+						}
+						result[p] = refs
 					}
 					return nil
 				})
 			if err != nil {
-				return err
+				return nil, err
 			}
 		} else {
 			if !util.IsTextFile(vfs.OS(filepath.Dir(path)), filepath.Base(path)) {
-				return fmt.Errorf("%s is not a text file", path)
+				return nil, fmt.Errorf("%s is not a text file", path)
 			}
-			listReferences(path, print_filenames)
+			refs, err := searchReferences(path)
+			if err != nil {
+				return nil, err
+			}
+			result[path] = refs
 		}
 	}
-	return nil
+	return result, nil
+}
+
+type ContainerImageReferenceMap map[string]ContainerImageReferences
+
+func (m ContainerImageReferenceMap) Merge() ContainerImageReferences {
+	result := make(ContainerImageReferences, 0)
+	for _, references := range m {
+		result = append(result, references...)
+	}
+	return result.Unique()
+}
+
+func List(paths []string, printFilenames bool) error {
+	refMap, err := SearchAllReferences(paths); if err == nil {
+		if printFilenames {
+			for path, references := range refMap {
+				for _, ref := range references {
+					fmt.Printf("%s:%s\n", path, ref)
+				}
+			}
+		} else {
+			references := refMap.Merge()
+			for _, ref := range references {
+				fmt.Printf("%s\n", ref)
+			}
+		}
+	}
+	return err
 }

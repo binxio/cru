@@ -77,7 +77,7 @@ func (r ContainerImageReference) String() string {
 }
 
 func FindAllContainerImageReference(content []byte) []ContainerImageReference {
-	var result = make([]ContainerImageReference, 0)
+	var result = make(ContainerImageReferences, 0)
 	allMatches := imageReferencePattern.FindAllIndex(content, -1)
 	for _, match := range allMatches {
 		s := string(content[match[0]:match[1]])
@@ -87,7 +87,7 @@ func FindAllContainerImageReference(content []byte) []ContainerImageReference {
 		}
 	}
 	sort.Sort(ContainerImageReferences(result))
-	return Unique(result)
+	return result.Unique()
 }
 
 func (r ContainerImageReference) SameRepository(o ContainerImageReference) bool {
@@ -106,10 +106,10 @@ func (r ContainerImageReference) FindLatest() (ContainerImageReference, error) {
 	return r, nil
 }
 
-func Unique(refs []ContainerImageReference) []ContainerImageReference {
+func (r ContainerImageReferences) Unique() []ContainerImageReference {
 	keys := make(map[string]bool)
 	result := []ContainerImageReference{}
-	for _, ref := range refs {
+	for _, ref := range r {
 		if _, value := keys[ref.String()]; !value {
 			keys[ref.String()] = true
 			result = append(result, ref)
@@ -134,6 +134,11 @@ func (r ContainerImageReference) ResolveDigest() (*ContainerImageReference, erro
 	}
 
 	return &ContainerImageReference{name: r.name, tag: "", digest: digest.String()}, nil
+}
+
+func (r *ContainerImageReference) SetTag(tag string) {
+	r.tag = tag
+	r.digest = ""
 }
 
 func (a ContainerImageReferences) ResolveDigest() (ContainerImageReferences, error) {

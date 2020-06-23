@@ -12,7 +12,7 @@ func main() {
 
 Usage:
   cru list [--no-filename] [PATH] ...
-  cru update [--dry-run] [--resolve-digest] [--image-reference=REFERENCE] ... [PATH] ...
+  cru update [--dry-run] [--resolve-digest] [--all | [--image-reference=REFERENCE] ...] [PATH] ...
   cru -h | --help
 
 Options:
@@ -35,6 +35,18 @@ Options:
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			log.Fatalf("ERROR: %s is not a file or directory\n", path)
 		}
+	}
+
+	if args["--all"].(bool) {
+		refMap, err := cmd.SearchAllReferences(paths)
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		references = refMap.Merge()
+		for i, _ := range references {
+			references[i].SetTag("latest")
+		}
+		references = references.Unique()
 	}
 
 	for _, ref := range args["--image-reference"].([]string) {
