@@ -47,7 +47,7 @@ func NewContainerImageReference(imageReference string) (*ContainerImageReference
 	}
 
 
-	_, err := name.ParseReference(imageReference, name.StrictValidation)
+	_, err := name.ParseReference(imageReference)
 	if err != nil {
 		return nil, fmt.Errorf("%s is not a container image reference, %s", imageReference, err)
 	}
