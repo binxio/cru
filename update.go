@@ -52,12 +52,14 @@ func updateFile(filename string, references []ContainerImageReference, dryRun bo
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
 	content, updated := updateReferences(content, references)
-	if updated && !dryRun {
-		err := ioutil.WriteFile(filename, content, 0644)
-		if err != nil {
-			return fmt.Errorf("failed to overwrite %s with updated references, %s", filename, err)
+	if updated {
+		log.Printf("INFO: updating %s\n", filename)
+		if !dryRun {
+			err := ioutil.WriteFile(filename, content, 0644)
+			if err != nil {
+				return fmt.Errorf("failed to overwrite %s with updated references, %s", filename, err)
+			}
 		}
-		log.Printf("INFO: updated %s\n", filename)
 	}
 	return nil
 }
