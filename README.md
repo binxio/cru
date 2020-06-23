@@ -54,3 +54,7 @@ If you want the image tag back:
 $ cru update --image-reference gcr.io/binx-io-public/paas-monitor:v3.2.4-5-g49d6871 update_test.go
 2020/06/23 13:31:53 INFO: updating update_test.go
 ``` 
+
+## Caveats
+- cru is not context-aware: anything that looks like a container image references is updated.
+- cru will ignore any references to unqualified official images, like docker:latest or nginx:3. To update the official docker image references, prefix them with docker.io/ or docker.io/library/.
