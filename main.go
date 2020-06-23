@@ -42,7 +42,7 @@ Options:
 	resolveLatest := args["--resolve-digest"].(bool)
 	if resolveLatest {
 		var err error
-		references, err = references.ResolveToDigest()
+		references, err = references.ResolveDigest()
 		if err != nil {
 			log.Fatal(err)
 		}

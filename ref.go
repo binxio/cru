@@ -23,10 +23,10 @@ type ContainerImageReference struct {
 	digest string
 }
 
-func NewContainerImageReference(original string) (*ContainerImageReference, error) {
-	subMatches := imageReferencePattern.FindStringSubmatch(original)
+func NewContainerImageReference(imageReference string) (*ContainerImageReference, error) {
+	subMatches := imageReferencePattern.FindStringSubmatch(imageReference)
 	if len(subMatches) == 0 {
-		return nil, fmt.Errorf("'%s' is not a docker image reference", original)
+		return nil, fmt.Errorf("'%s' is not a docker image reference", imageReference)
 	}
 
 	var result ContainerImageReference
@@ -46,10 +46,16 @@ func NewContainerImageReference(original string) (*ContainerImageReference, erro
 		return nil, fmt.Errorf("docker image reference without a tag or digest")
 	}
 
+
+	_, err := name.ParseReference(imageReference, name.StrictValidation)
+	if err != nil {
+		return nil, fmt.Errorf("%s is not a container image reference, %s", imageReference, err)
+	}
+
 	return &result, nil
 }
-func MustNewContainerImageReference(original string) *ContainerImageReference {
-	r, err := NewContainerImageReference(original)
+func MustNewContainerImageReference(imageReference string) *ContainerImageReference {
+	r, err := NewContainerImageReference(imageReference)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -112,7 +118,7 @@ func Unique(refs []ContainerImageReference) []ContainerImageReference {
 	return result
 }
 
-func (r ContainerImageReference) ResolveToDigest() (*ContainerImageReference, error) {
+func (r ContainerImageReference) ResolveDigest() (*ContainerImageReference, error) {
 	ref, err := name.ParseReference(r.String())
 	if err != nil {
 		return nil, err
@@ -130,10 +136,10 @@ func (r ContainerImageReference) ResolveToDigest() (*ContainerImageReference, er
 	return &ContainerImageReference{name: r.name, tag: "", digest: digest.String()}, nil
 }
 
-func (a ContainerImageReferences) ResolveToDigest() (ContainerImageReferences, error) {
+func (a ContainerImageReferences) ResolveDigest() (ContainerImageReferences, error) {
 	result := make([]ContainerImageReference, 0, a.Len())
 	for _, r := range a {
-		rr, err := r.ResolveToDigest()
+		rr, err := r.ResolveDigest()
 		if err != nil {
 			return nil, err
 		}
