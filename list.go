@@ -5,7 +5,6 @@ import (
 	"golang.org/x/tools/godoc/util"
 	"golang.org/x/tools/godoc/vfs"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -48,7 +47,6 @@ func list(paths []string, print_filenames bool) error {
 				return err
 			}
 		} else {
-			log.Println(path)
 			if !util.IsTextFile(vfs.OS(filepath.Dir(path)), filepath.Base(path)) {
 				return fmt.Errorf("%s is not a text file", path)
 			}
