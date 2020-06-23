@@ -63,7 +63,7 @@ func (m ContainerImageReferenceMap) Merge() ContainerImageReferences {
 	for _, references := range m {
 		result = append(result, references...)
 	}
-	return result.Unique()
+	return result.RemoveDuplicates()
 }
 
 func List(paths []string, printFilenames bool) error {

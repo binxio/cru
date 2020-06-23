@@ -17,6 +17,7 @@ cru -h | --help
  --resolve-digest     change the image reference tag to a reference of the digest of the image.
  --image-reference=REFERENCE to update.
  --dry-run            pretend to run the update, make no changes.
+ --all                replace all container image reference tags with `latest`
 ```
 
 
@@ -37,7 +38,7 @@ update_test.go: gcr.io/binxio/paas-monitor:v0.3.2
 update_test.go: gcr.io/binxio/paas-monitor:v1.0.0
 ``` 
 
-Update all image references of eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 in the file update_test.go:
+Update all image references of eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 in the file update\_test.go:
 ```
 $ cru update --image-reference eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 update_test.go
 2020/06/23 13:19:11 INFO: updating update_test.go
@@ -53,6 +54,13 @@ If you want the image tag back:
 ```
 $ cru update --image-reference gcr.io/binx-io-public/paas-monitor:v3.2.4-5-g49d6871 update_test.go
 2020/06/23 13:31:53 INFO: updating update_test.go
+``` 
+
+If you want to snapshot all image references to the latest version, use --all --resolve-digest:
+```
+$ cru update --all --resolve-digest cmd/resolve_test.go
+2020/06/23 19:49:17 resolving repository mvanholsteijn/paas-monitor tag latest to digest sha256:673545ac2fc55ff8dd8ef734b928aa34e5f498ef5aed2ec4cdfc028efe7585f3
+2020/06/23 19:49:17 INFO: updating cmd/resolve_test.go 
 ``` 
 
 ## Caveats

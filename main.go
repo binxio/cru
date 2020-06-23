@@ -20,8 +20,8 @@ Options:
 --resolve-digest 	change the image reference tag to a reference of the digest of the image.
 --image-reference=REFERENCE to update.
 --dry-run			pretend to run the update, make no changes.
+--all               replace all container image reference tags with "latest"
 `
-
 	args, err := docopt.ParseDoc(usage)
 	if err != nil {
 		log.Fatal(err)
@@ -46,7 +46,7 @@ Options:
 		for i, _ := range references {
 			references[i].SetTag("latest")
 		}
-		references = references.Unique()
+		references = references.RemoveDuplicates()
 	}
 
 	for _, ref := range args["--image-reference"].([]string) {

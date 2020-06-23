@@ -87,7 +87,7 @@ func FindAllContainerImageReference(content []byte) []ContainerImageReference {
 		}
 	}
 	sort.Sort(ContainerImageReferences(result))
-	return result.Unique()
+	return result.RemoveDuplicates()
 }
 
 func (r ContainerImageReference) SameRepository(o ContainerImageReference) bool {
@@ -106,7 +106,7 @@ func (r ContainerImageReference) FindLatest() (ContainerImageReference, error) {
 	return r, nil
 }
 
-func (r ContainerImageReferences) Unique() []ContainerImageReference {
+func (r ContainerImageReferences) RemoveDuplicates() []ContainerImageReference {
 	keys := make(map[string]bool)
 	result := []ContainerImageReference{}
 	for _, ref := range r {
