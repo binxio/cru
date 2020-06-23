@@ -143,6 +143,7 @@ func (a ContainerImageReferences) ResolveDigest() (ContainerImageReferences, err
 		if err != nil {
 			return nil, err
 		}
+		log.Printf("resolving repository %s tag %s to digest %s\n", r.name, r.tag, rr.digest)
 		result = append(result, *rr)
 	}
 	return result, nil
