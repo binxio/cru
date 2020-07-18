@@ -9,20 +9,20 @@ processed.
 
 ## Usage
 ```
-cru list [--no-filename] [PATH] ...
-cru update [--dry-run] [--resolve-digest] (--all | --image-reference=REFERENCE ...) [PATH] ...
-cru -h | --help
-
+  cru list   [--verbose] [--no-filename] [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru -h | --help
 ```
 ## Options
 ```
- --no-filename        do not print the filename.
- --resolve-digest     change the image reference tag to a reference of the digest of the image.
- --image-reference=REFERENCE to update.
- --dry-run            pretend to run the update, make no changes.
- --all                replace all container image reference tags with `latest`
+--no-filename	    do not print the filename.
+--resolve-digest 	change the image reference tag to a reference of the digest of the image.
+--resolve-tag		change the image reference tag to the first alternate tag of the reference.
+--image-reference=REFERENCE to update.
+--dry-run			pretend to run the update, make no changes.
+--all               replace all container image reference tags with "latest"
+--verbose			show more output.```
 ```
-
 
 ## Examples
 Search for image references in the current directory
@@ -41,10 +41,10 @@ update_test.go: gcr.io/binxio/paas-monitor:v0.3.2
 update_test.go: gcr.io/binxio/paas-monitor:v1.0.0
 ``` 
 
-Update all image references of eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 in the file update\_test.go:
+Update all image references of eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 in the file ref/update\_test.go:
 ```
-$ cru update --image-reference eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 update_test.go
-2020/06/23 13:19:11 INFO: updating update_test.go
+$ cru update --image-reference eu.gcr.io/binxio/paas-monitor:v3.2.4-5-g49d6871 ref/update_test.go
+2020/06/23 13:19:11 INFO: updating ref/update_test.go
 ``` 
 
 Update a specific image reference with the exact digest, add `--resolve-digest`: 
@@ -55,17 +55,25 @@ $ cru update --resolve-digest --image-reference gcr.io/binx-io-public/paas-monit
 ``` 
 If you want the image tag back:
 ```
-$ cru update --image-reference gcr.io/binx-io-public/paas-monitor:v3.2.4-5-g49d6871 update_test.go
-2020/06/23 13:31:53 INFO: updating update_test.go
+$ cru update --image-reference gcr.io/binx-io-public/paas-monitor:v3.2.4-5-g49d6871 ref/update_test.go
+2020/06/23 13:31:53 INFO: updating ref/update_test.go
 ``` 
 
 If you want to snapshot all image references to the latest version, use --all --resolve-digest:
 ```
-$ cru update --all --resolve-digest cmd/resolve_test.go
+$ cru update --all --resolve-digest ref/resolve_test.go
 2020/06/23 19:49:17 resolving repository mvanholsteijn/paas-monitor tag latest to digest sha256:673545ac2fc55ff8dd8ef734b928aa34e5f498ef5aed2ec4cdfc028efe7585f3
-2020/06/23 19:49:17 INFO: updating cmd/resolve_test.go 
+2020/06/23 19:49:17 INFO: updating ref/resolve_test.go 
+``` 
+
+If you want to snapshot all image references to the latest version, with the alternate tag:
+```
+$ cru update --image-reference gcr.io/binx-io-public/paas-monitor:latest --resolve-tag ref/resolve_test.go
+2020/07/18 22:55:32 resolving repository gcr.io/binx-io-public/paas-monitor tag 'latest' to 'v3.2.4-5-g49d6871'
+2020/07/18 22:55:32 INFO: updating ref/resolve_test.go
 ``` 
 
 ## Caveats
 - cru is not context-aware: anything that looks like a container image references is updated.
 - cru will ignore any references to unqualified official images, like docker:latest or nginx:3. To update the official docker image references, prefix them with docker.io/ or docker.io/library/.
+- the time to find the alternate tag is proportional to the number of tags associated with the image.   

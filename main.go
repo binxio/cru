@@ -15,6 +15,7 @@ type Cru struct {
 	dryRun          bool
 	verbose         bool
 	resolveDigest   bool
+	resolveTag      bool
 	imageReferences ref.ContainerImageReferences
 }
 
@@ -77,12 +78,13 @@ func main() {
 
 Usage:
   cru list   [--verbose] [--no-filename] [PATH] ...
-  cru update [--verbose] [--dry-run] [--resolve-digest] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] (--all | --image-reference=REFERENCE ...) [PATH] ...
   cru -h | --help
 
 Options:
 --no-filename	    do not print the filename.
 --resolve-digest 	change the image reference tag to a reference of the digest of the image.
+--resolve-tag		change the image reference tag to the first alternate tag of the reference.
 --image-reference=REFERENCE to update.
 --dry-run			pretend to run the update, make no changes.
 --all               replace all container image reference tags with "latest"
@@ -100,6 +102,7 @@ Options:
 	cru.verbose = args["--verbose"].(bool)
 	cru.noFilename = args["--no-filename"].(bool)
 	cru.resolveDigest = args["--resolve-digest"].(bool)
+	cru.resolveTag = args["--resolve-tag"].(bool)
 	cru.imageReferences = make(ref.ContainerImageReferences, 0)
 
 	cru.AssertPathsExists()
@@ -130,10 +133,17 @@ Options:
 		cru.imageReferences = append(cru.imageReferences, *r)
 	}
 
-	resolveLatest := args["--resolve-digest"].(bool)
-	if resolveLatest {
+	if cru.resolveDigest {
 		var err error
 		cru.imageReferences, err = cru.imageReferences.ResolveDigest()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if cru.resolveTag {
+		var err error
+		cru.imageReferences, err = cru.imageReferences.ResolveTag()
 		if err != nil {
 			log.Fatal(err)
 		}

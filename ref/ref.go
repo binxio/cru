@@ -47,7 +47,6 @@ func NewContainerImageReference(imageReference string) (*ContainerImageReference
 		return nil, fmt.Errorf("docker image reference without a Tag or Digest")
 	}
 
-
 	_, err := name.ParseReference(imageReference)
 	if err != nil {
 		return nil, fmt.Errorf("%s is not a container image reference, %s", imageReference, err)
@@ -110,7 +109,7 @@ func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
 		return result, fmt.Errorf("could not retrieve tags for %s", r.Name)
 	}
 	for _, tag := range tags {
-		tagged, err := ContainerImageReference{Name: r.Name, Tag:tag}.ResolveDigest()
+		tagged, err := ContainerImageReference{Name: r.Name, Tag: tag}.ResolveDigest()
 		if err != nil {
 			log.Printf("skipping %s, %s", tag, err)
 			err = nil
@@ -123,7 +122,6 @@ func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
 
 	return result, nil
 }
-
 
 func UpdateReference(content []byte, reference ContainerImageReference) ([]byte, bool) {
 	previous := 0
@@ -159,7 +157,6 @@ func UpdateReferences(content []byte, references ContainerImageReferences) ([]by
 	}
 	return content, updated
 }
-
 
 func (r ContainerImageReferences) RemoveDuplicates() []ContainerImageReference {
 	keys := make(map[string]bool)
@@ -206,6 +203,27 @@ func (a ContainerImageReferences) ResolveDigest() (ContainerImageReferences, err
 		log.Printf("resolving repository %s Tag %s to Digest %s\n", r.Name, r.Tag, rr.Digest)
 		result = append(result, *rr)
 	}
+	return result, nil
+}
+
+func (a ContainerImageReferences) ResolveTag() (ContainerImageReferences, error) {
+	result := make([]ContainerImageReference, 0, a.Len())
+	for _, r := range a {
+		tags, err := r.FindAlternateTags()
+		if err != nil {
+			return nil, err
+		}
+		if len(tags) > 2 {
+			log.Printf("WARNING: %s has multiple tags, %v", r, tags)
+		}
+		for _, tag := range tags {
+			if tag != r.Tag {
+				log.Printf("resolving repository %s tag '%s' to '%s'\n", r.Name, r.Tag, tag)
+				result = append(result, ContainerImageReference{Tag: tag, Name:r.Name})
+			}
+		}
+	}
+
 	return result, nil
 }
 
