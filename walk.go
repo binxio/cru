@@ -69,22 +69,39 @@ func (c *Cru) Walk(visitor Visitor) error {
 					if err != nil {
 						return err
 					}
-
 					if gitIgnorePattern.Ignore(p, info.IsDir()) {
+
 						if info.IsDir() {
+							if c.verbose {
+								log.Printf("INFO: ignoring directory %s\n", p)
+							}
 							return filepath.SkipDir
+						}
+						if c.verbose {
+							log.Printf("INFO: ignoring file %s\n", p)
 						}
 						return nil
 					}
 
 					if info.IsDir() && filepath.Base(p) == ".git" {
+						if c.verbose {
+							log.Printf("INFO: ignoring .git directory\n")
+						}
 						return filepath.SkipDir
+					}
+
+					if info.IsDir() {
+						return nil
 					}
 
 					if util.IsTextFile(vfs.OS(filepath.Dir(p)), filepath.Base(p)) {
 						err = visitor(c, p)
 						if err != nil {
 							return err
+						}
+					} else {
+						if c.verbose {
+							log.Printf("INFO: skipping %s: not a text file\n", p)
 						}
 					}
 					return nil
