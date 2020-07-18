@@ -4,10 +4,13 @@ Container Reference Updater - updates container image references
 Update kubernetes manifests, Terraform configuration files, or any other infrastructural 
 with the latest container image reference. 
 
+If the directory specified is part of a git workspace, files matched by .gitignore are not
+processed.
+
 ## Usage
 ```
 cru list [--no-filename] [PATH] ...
-cru update [--dry-run] [--resolve-digest] [--all | [--image-reference=REFERENCE] ...] [PATH] ...
+cru update [--dry-run] [--resolve-digest] (--all | --image-reference=REFERENCE ...) [PATH] ...
 cru -h | --help
 
 ```
