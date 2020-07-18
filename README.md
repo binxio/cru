@@ -15,13 +15,13 @@ processed.
 ```
 ## Options
 ```
---no-filename	    do not print the filename.
---resolve-digest 	change the image reference tag to a reference of the digest of the image.
---resolve-tag		change the image reference tag to the first alternate tag of the reference.
+--no-filename	              do not print the filename.
+--resolve-digest 	          change the image reference tag to a reference of the digest of the image.
+--resolve-tag		            change the image reference tag to the first alternate tag of the reference.
 --image-reference=REFERENCE to update.
---dry-run			pretend to run the update, make no changes.
---all               replace all container image reference tags with "latest"
---verbose			show more output.```
+--dry-run			              pretend to run the update, make no changes.
+--all                       replace all container image reference tags with "latest"
+--verbose			              show more output.
 ```
 
 ## Examples
