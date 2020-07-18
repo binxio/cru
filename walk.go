@@ -47,7 +47,7 @@ func (c *Cru) Walk(visitor Visitor) error {
 					if err != nil {
 						return err
 					}
-					if gitIgnorePattern.Ignore(p, false) {
+					if gitIgnorePattern.Ignore(p, info.IsDir()) {
 						return nil
 					}
 					if util.IsTextFile(vfs.OS(filepath.Dir(p)), filepath.Base(p)) {
