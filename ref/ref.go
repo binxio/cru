@@ -1,6 +1,7 @@
-package cmd
+package ref
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -13,14 +14,14 @@ import (
 )
 
 var (
-	imageReferencePattern = regexp.MustCompile(`(?P<name>[a-zA-Z0-9\-\.]+(:[0-9]+)?/[\w\-/]+)((:(?P<tag>[\w][\w\.-]+))|(@(?P<digest>[a-zA-Z][a-zA-Z0-9]*:[0-9a-fA-F+\.-_]{32,})))`)
+	imageReferencePattern = regexp.MustCompile(`(?P<Name>[a-zA-Z0-9\-\.]+(:[0-9]+)?/[\w\-/]+)((:(?P<Tag>[\w][\w\.-]+))|(@(?P<Digest>[a-zA-Z][a-zA-Z0-9]*:[0-9a-fA-F+\.-_]{32,})))`)
 	submatchNames         = imageReferencePattern.SubexpNames()
 )
 
 type ContainerImageReference struct {
-	tag    string
-	name   string
-	digest string
+	Tag    string
+	Name   string
+	Digest string
 }
 
 func NewContainerImageReference(imageReference string) (*ContainerImageReference, error) {
@@ -32,18 +33,18 @@ func NewContainerImageReference(imageReference string) (*ContainerImageReference
 	var result ContainerImageReference
 	for i, name := range submatchNames {
 		switch name {
-		case "name":
-			result.name = subMatches[i]
-		case "tag":
-			result.tag = subMatches[i]
-		case "digest":
-			result.digest = subMatches[i]
+		case "Name":
+			result.Name = subMatches[i]
+		case "Tag":
+			result.Tag = subMatches[i]
+		case "Digest":
+			result.Digest = subMatches[i]
 		default:
 			// ignore
 		}
 	}
-	if result.tag == "" && result.digest == "" {
-		return nil, fmt.Errorf("docker image reference without a tag or digest")
+	if result.Tag == "" && result.Digest == "" {
+		return nil, fmt.Errorf("docker image reference without a Tag or Digest")
 	}
 
 
@@ -64,14 +65,14 @@ func MustNewContainerImageReference(imageReference string) *ContainerImageRefere
 
 func (r ContainerImageReference) String() string {
 	builder := strings.Builder{}
-	builder.WriteString(r.name)
-	if r.tag != "" {
+	builder.WriteString(r.Name)
+	if r.Tag != "" {
 		builder.WriteString(":")
-		builder.WriteString(r.tag)
+		builder.WriteString(r.Tag)
 	}
-	if r.digest != "" {
+	if r.Digest != "" {
 		builder.WriteString("@")
-		builder.WriteString(r.digest)
+		builder.WriteString(r.Digest)
 	}
 	return builder.String()
 }
@@ -91,20 +92,73 @@ func FindAllContainerImageReference(content []byte) []ContainerImageReference {
 }
 
 func (r ContainerImageReference) SameRepository(o ContainerImageReference) bool {
-	return r.name == o.name
+	return r.Name == o.Name
 }
 
 func (a ContainerImageReference) Compare(b ContainerImageReference) int {
 	return strings.Compare(a.String(), b.String())
 }
 
-func (r ContainerImageReference) FindLatest() (ContainerImageReference, error) {
-	tags, err := crane.ListTags(r.name)
-	if err == nil {
-		fmt.Println(tags)
+func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
+	result := make([]string, 0)
+	latest, err := r.ResolveDigest()
+	if err != nil {
+		return result, err
 	}
-	return r, nil
+	tags, err := crane.ListTags(r.Name)
+	if err != nil {
+		return result, fmt.Errorf("could not retrieve tags for %s", r.Name)
+	}
+	for _, tag := range tags {
+		tagged, err := ContainerImageReference{Name: r.Name, Tag:tag}.ResolveDigest()
+		if err != nil {
+			log.Printf("skipping %s, %s", tag, err)
+			return result, err
+		}
+		if tagged.Digest == latest.Digest {
+			result = append(result, tag)
+		}
+	}
+
+	return result, nil
 }
+
+
+func UpdateReference(content []byte, reference ContainerImageReference) ([]byte, bool) {
+	previous := 0
+	updated := false
+	result := bytes.Buffer{}
+	allMatches := imageReferencePattern.FindAllIndex(content, -1)
+	for _, match := range allMatches {
+		s := string(content[match[0]:match[1]])
+		r, err := NewContainerImageReference(s)
+		if err == nil && r.Name == reference.Name {
+			if r.String() != reference.String() {
+				updated = true
+				result.Write(content[previous:match[0]])
+				result.Write([]byte(reference.String()))
+				previous = match[1]
+			}
+		}
+	}
+	if previous < len(content) {
+		result.Write(content[previous:len(content)])
+	}
+
+	return result.Bytes(), updated
+}
+
+func UpdateReferences(content []byte, references ContainerImageReferences) ([]byte, bool) {
+	updated := false
+	changed := false
+	for _, ref := range references {
+		if content, changed = UpdateReference(content, ref); changed {
+			updated = true
+		}
+	}
+	return content, updated
+}
+
 
 func (r ContainerImageReferences) RemoveDuplicates() []ContainerImageReference {
 	keys := make(map[string]bool)
@@ -130,15 +184,15 @@ func (r ContainerImageReference) ResolveDigest() (*ContainerImageReference, erro
 	}
 	digest, err := img.Digest()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get digest for %s, %s", r, err)
+		return nil, fmt.Errorf("failed to get Digest for %s, %s", r, err)
 	}
 
-	return &ContainerImageReference{name: r.name, tag: "", digest: digest.String()}, nil
+	return &ContainerImageReference{Name: r.Name, Tag: "", Digest: digest.String()}, nil
 }
 
 func (r *ContainerImageReference) SetTag(tag string) {
-	r.tag = tag
-	r.digest = ""
+	r.Tag = tag
+	r.Digest = ""
 }
 
 func (a ContainerImageReferences) ResolveDigest() (ContainerImageReferences, error) {
@@ -148,7 +202,7 @@ func (a ContainerImageReferences) ResolveDigest() (ContainerImageReferences, err
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("resolving repository %s tag %s to digest %s\n", r.name, r.tag, rr.digest)
+		log.Printf("resolving repository %s Tag %s to Digest %s\n", r.Name, r.Tag, rr.Digest)
 		result = append(result, *rr)
 	}
 	return result, nil

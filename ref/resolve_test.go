@@ -1,4 +1,4 @@
-package cmd
+package ref
 
 import (
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestImageResolve(t *testing.T) {
-	r := MustNewContainerImageReference("mvanholsteijn/paas-monitor:3.0.1")
+	r := MustNewContainerImageReference("gcr.io/binx-io-public/paas-monitor:latest")
 	rr, err := r.ResolveDigest()
 	if err != nil {
 		t.Fatal(err)
@@ -28,15 +28,15 @@ func TestImageResolve(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if digest.String() != rr.digest {
-		t.Fatalf("expected %s, got %s", digest, rr.digest)
+	if digest.String() != rr.Digest {
+		t.Fatalf("expected %s, got %s", digest, rr.Digest)
 	}
-	rr, err = MustNewContainerImageReference("mvanholsteijn/paas-monitor:3.0.2").ResolveDigest()
+	rr, err = ref.MustNewContainerImageReference("mvanholsteijn/paas-monitor:3.0.2").ResolveDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if digest.String() == rr.digest {
-		t.Fatalf("expected different digest than %s, got %s", digest, rr.digest)
+	if digest.String() == rr.Digest {
+		t.Fatalf("expected different Digest than %s, got %s", digest, rr.Digest)
 	}
 
 }
@@ -54,14 +54,26 @@ func TestImageResolves(t *testing.T) {
 	}
 
 	for i, r := range resolved {
-		if r.digest == "" {
-			t.Fatal("expected digest to be set")
+		if r.Digest == "" {
+			t.Fatal("expected Digest to be set")
 		}
-		if r.tag != "" {
-			t.Fatalf("expected tag to be cleared, found %s", r.tag)
+		if r.Tag != "" {
+			t.Fatalf("expected Tag to be cleared, found %s", r.Tag)
 		}
-		if r.name != references[i].name {
-			t.Fatalf("expected name to be %s, got %s", references[i].name, r.name)
+		if r.Name != references[i].Name {
+			t.Fatalf("expected Name to be %s, got %s", references[i].Name, r.Name)
 		}
 	}
+}
+
+func TestFindAlternateTags(t *testing.T) {
+	latest := MustNewContainerImageReference("mvanholsteijn/paas-monitor:latest")
+	tags, err :=latest.FindAlternateTags()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tags) == 0 {
+		t.Fatalf("expected at least one alternate Tag, found 0")
+	}
+	t.Logf("found alternate tags for %s, %v", latest, tags)
 }
