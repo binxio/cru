@@ -29,8 +29,7 @@ func (c *Cru) AssertPathsExists() {
 	}
 }
 
-
-func CollectReferences(c *Cru, filename string)  error {
+func CollectReferences(c *Cru, filename string) error {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
@@ -53,7 +52,6 @@ func List(c *Cru, filename string) error {
 	}
 	return nil
 }
-
 
 func Update(c *Cru, filename string) error {
 	content, err := ioutil.ReadFile(filename)
@@ -98,11 +96,10 @@ Options:
 	cru.paths = args["PATH"].([]string)
 	cru.dryRun = args["--dry-run"].(bool)
 	cru.noFilename = args["--no-filename"].(bool)
-	cru.resolveDigest= args["--resolve-digest"].(bool)
+	cru.resolveDigest = args["--resolve-digest"].(bool)
 	cru.imageReferences = make(ref.ContainerImageReferences, 0)
 
 	cru.AssertPathsExists()
-
 
 	if args["--all"].(bool) {
 		err = cru.Walk(CollectReferences)
@@ -110,7 +107,7 @@ Options:
 			log.Fatalf("%s\n", err)
 		}
 		for i, _ := range cru.imageReferences {
-			cru.imageReferences [i].SetTag("latest")
+			cru.imageReferences[i].SetTag("latest")
 		}
 		cru.imageReferences = cru.imageReferences.RemoveDuplicates()
 	}
