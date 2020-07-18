@@ -113,7 +113,8 @@ func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
 		tagged, err := ContainerImageReference{Name: r.Name, Tag:tag}.ResolveDigest()
 		if err != nil {
 			log.Printf("skipping %s, %s", tag, err)
-			return result, err
+			err = nil
+			continue
 		}
 		if tagged.Digest == latest.Digest {
 			result = append(result, tag)

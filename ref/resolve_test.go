@@ -31,7 +31,7 @@ func TestImageResolve(t *testing.T) {
 	if digest.String() != rr.Digest {
 		t.Fatalf("expected %s, got %s", digest, rr.Digest)
 	}
-	rr, err = ref.MustNewContainerImageReference("mvanholsteijn/paas-monitor:3.0.2").ResolveDigest()
+	rr, err = MustNewContainerImageReference("mvanholsteijn/paas-monitor:3.0.2").ResolveDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestImageResolves(t *testing.T) {
 }
 
 func TestFindAlternateTags(t *testing.T) {
-	latest := MustNewContainerImageReference("mvanholsteijn/paas-monitor:latest")
+	latest := MustNewContainerImageReference("gcr.io/binx-io-public/paas-monitor:latest")
 	tags, err :=latest.FindAlternateTags()
 	if err != nil {
 		t.Fatal(err)
