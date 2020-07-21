@@ -1,54 +1,100 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/binxio/cru/ref"
 	"github.com/docopt/docopt-go"
+	"gopkg.in/src-d/go-billy.v4"
+	"gopkg.in/src-d/go-billy.v4/osfs"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 type Cru struct {
-	paths           []string
-	noFilename      bool
-	dryRun          bool
-	verbose         bool
-	resolveDigest   bool
-	resolveTag      bool
-	imageReferences ref.ContainerImageReferences
+	Path           []string
+	List           bool
+	Update         bool
+	Bump           bool
+	NoFilename     bool
+	DryRun         bool
+	Verbose        bool
+	ResolveDigest  bool
+	ResolveTag     bool
+	All            bool
+	ImageReference []string
+	Level          string
+	Url            string `docopt:"--repository"`
+	CommitMsg      string `docopt:"--commit"`
+	Branch         string `docopt:"--branch"`
+	imageRefs      ref.ContainerImageReferences
+	updatedFiles   []string
+	committedFiles []string
+	repository     *git.Repository
+	workTree       *git.Worktree
+	filesystem     *billy.Filesystem
+	cwd            string
 }
 
 func (c *Cru) AssertPathsExists() {
-	if len(c.paths) == 0 {
-		c.paths = append(c.paths, ".")
+	if len(c.Path) == 0 {
+		c.Path = append(c.Path, ".")
 	}
 
-	for _, path := range c.paths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+	for _, path := range c.Path {
+		if _, err := (*c.filesystem).Stat(c.AbsPath(path)); os.IsNotExist(err) {
 			log.Fatalf("ERROR: %s is not a file or directory\n", path)
 		}
 	}
 }
 
 func CollectReferences(c *Cru, filename string) error {
-	content, err := ioutil.ReadFile(filename)
+	content, err := c.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
-	c.imageReferences = append(c.imageReferences, ref.FindAllContainerImageReference(content)...)
+	c.imageRefs = append(c.imageRefs, ref.FindAllContainerImageReference(content)...)
 	return nil
 }
 
+func (c *Cru) ReadFile(filename string) (content []byte, err error) {
+	var file billy.File
+	file, err = (*c.filesystem).Open(filename)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	return ioutil.ReadAll(file)
+}
+
+func (c *Cru) WriteFile(filename string, content []byte, perm os.FileMode) error {
+	file, err := (*c.filesystem).OpenFile(filename, os.O_WRONLY|os.O_TRUNC, perm)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.Write(content)
+	return err
+}
+
 func List(c *Cru, filename string) error {
-	content, err := ioutil.ReadFile(filename)
+
+	content, err := c.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
 	for _, ref := range ref.FindAllContainerImageReference(content) {
-		if c.noFilename {
+		if c.NoFilename {
 			fmt.Printf("%s\n", ref.String())
 		} else {
+			if relative, err := filepath.Rel(c.cwd, filename); err == nil {
+				filename = relative
+			}
 			fmt.Printf("%s:%s\n", filename, ref.String())
 		}
 	}
@@ -56,30 +102,81 @@ func List(c *Cru, filename string) error {
 }
 
 func Update(c *Cru, filename string) error {
-	content, err := ioutil.ReadFile(filename)
+	content, err := c.ReadFile(filename)
 	if err != nil {
-		return fmt.Errorf("could not read %s, %s", filename, err)
+		return fmt.Errorf("could not read %s, %s", c.RelPath(filename), err)
 	}
-	content, updated := ref.UpdateReferences(content, c.imageReferences)
+	content, updated := ref.UpdateReferences(content, c.imageRefs, c.RelPath(filename), c.Verbose)
 	if updated {
-		log.Printf("INFO: updating %s\n", filename)
-		if !c.dryRun {
-			err := ioutil.WriteFile(filename, content, 0644)
+		if !c.DryRun {
+			err := c.WriteFile(filename, content, 0644)
 			if err != nil {
-				return fmt.Errorf("failed to overwrite %s with updated references, %s", filename, err)
+				return fmt.Errorf("failed to overwrite %s with updated references, %s", c.RelPath(filename), err)
 			}
 		}
+		c.updatedFiles = append(c.updatedFiles, filename)
 	}
 	return nil
+}
+
+func (cru *Cru) ConnectToRepository() {
+	if cru.Url != "" {
+		var progressReporter io.Writer = os.Stderr
+		if !cru.Verbose {
+			progressReporter = &bytes.Buffer{}
+		}
+		repository, err := Clone(cru.Url, progressReporter)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cru.repository = repository
+
+		wt, err := repository.Worktree()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		cru.workTree = wt
+		if cru.Branch != "" {
+			var branch *plumbing.Reference
+			if branches, err := repository.Branches(); err == nil {
+				branches.ForEach(func(ref *plumbing.Reference) error {
+					if ref.Name().Short() == cru.Branch {
+						branch = ref
+					}
+					return nil
+				})
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+			if branch == nil {
+				log.Fatalf("ERROR: branch %s not found", cru.Branch)
+			}
+			err = wt.Checkout(&git.CheckoutOptions{Branch: branch.Name()})
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		cru.filesystem = &wt.Filesystem
+		cru.cwd = "/"
+	} else {
+		cwd, err := filepath.Abs(".")
+		if err != nil {
+			log.Fatal(err)
+		}
+		cru.cwd = cwd
+		fs := osfs.New("/")
+		cru.filesystem = &fs
+	}
 }
 
 func main() {
 	usage := `cru - container image reference updater
 
 Usage:
-  cru list   [--verbose] [--no-filename] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] (--all | --image-reference=REFERENCE ...) [PATH] ...
-  cru -h | --help
+  cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]] [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
 
 Options:
 --no-filename	    do not print the filename.
@@ -89,6 +186,9 @@ Options:
 --dry-run			pretend to run the update, make no changes.
 --all               replace all container image reference tags with "latest"
 --verbose			show more output.
+--commit=MESSAGE	commit the changes with the specified message.
+--repository=URL    to read and/or update.
+--branch=BRANCH     to update.
 
 `
 	cru := Cru{}
@@ -97,63 +197,81 @@ Options:
 	if err != nil {
 		log.Fatal(err)
 	}
-	cru.paths = args["PATH"].([]string)
-	cru.dryRun = args["--dry-run"].(bool)
-	cru.verbose = args["--verbose"].(bool)
-	cru.noFilename = args["--no-filename"].(bool)
-	cru.resolveDigest = args["--resolve-digest"].(bool)
-	cru.resolveTag = args["--resolve-tag"].(bool)
-	cru.imageReferences = make(ref.ContainerImageReferences, 0)
+
+	if err = args.Bind(&cru); err != nil {
+		log.Fatal(err)
+	}
+
+	cru.ConnectToRepository()
+	cru.imageRefs = make(ref.ContainerImageReferences, 0)
 
 	cru.AssertPathsExists()
 
-	if args["--all"].(bool) {
-		if cru.verbose {
+	if cru.All {
+		if cru.Verbose {
 			log.Println("INFO: collecting all container references")
 		}
 		err = cru.Walk(CollectReferences)
 		if err != nil {
 			log.Fatalf("%s\n", err)
 		}
-		for i, _ := range cru.imageReferences {
-			cru.imageReferences[i].SetTag("latest")
+		for i, _ := range cru.imageRefs {
+			cru.imageRefs[i].SetTag("latest")
 		}
-		cru.imageReferences = cru.imageReferences.RemoveDuplicates()
-		log.Printf("INFO: %d image references found\n", len(cru.imageReferences))
-		if len(cru.imageReferences) == 0 {
+		cru.imageRefs = cru.imageRefs.RemoveDuplicates()
+		log.Printf("INFO: %d image references found\n", len(cru.imageRefs))
+		if len(cru.imageRefs) == 0 {
 			os.Exit(0)
 		}
 	}
 
-	for _, r := range args["--image-reference"].([]string) {
+	for _, r := range cru.ImageReference {
 		r, err := ref.NewContainerImageReference(r)
 		if err != nil {
 			log.Fatalf("ERROR: %s", err)
 		}
-		cru.imageReferences = append(cru.imageReferences, *r)
+		cru.imageRefs = append(cru.imageRefs, *r)
 	}
 
-	if cru.resolveDigest {
+	if cru.ResolveDigest {
 		var err error
-		cru.imageReferences, err = cru.imageReferences.ResolveDigest()
+		cru.imageRefs, err = cru.imageRefs.ResolveDigest()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	if cru.resolveTag {
+	if cru.ResolveTag {
 		var err error
-		cru.imageReferences, err = cru.imageReferences.ResolveTag()
+		cru.imageRefs, err = cru.imageRefs.ResolveTag()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	if args["list"].(bool) {
-		cru.Walk(List)
-	} else if args["update"].(bool) {
-		if cru.verbose {
+	if cru.List {
+		if err = cru.Walk(List); err != nil {
+			log.Fatal(err)
 		}
-		cru.Walk(Update)
+	} else if cru.Update {
+		if err = cru.Walk(Update); err != nil {
+			log.Fatal(err)
+		}
+		if len(cru.updatedFiles) > 0 {
+			log.Printf("INFO: updated a total of %d files", len(cru.updatedFiles))
+			if cru.CommitMsg != "" {
+				if err = cru.Commit(); err != nil {
+					log.Fatal(err)
+				}
+				if !IsLocalEndpoint(cru.Url) {
+					if err = cru.Push(); err != nil {
+						log.Fatal(err)
+					}
+				}
+			}
+		} else {
+			log.Println("INFO: no files were updated by cru")
+		}
+
 	}
 }

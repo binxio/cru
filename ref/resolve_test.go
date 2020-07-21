@@ -31,7 +31,7 @@ func TestImageResolve(t *testing.T) {
 	if digest.String() != rr.Digest {
 		t.Fatalf("expected %s, got %s", digest, rr.Digest)
 	}
-	rr, err = MustNewContainerImageReference("mvanholsteijn/paas-monitor:3.0.2").ResolveDigest()
+	rr, err = MustNewContainerImageReference("mvanholsteijn/paas-monitor:3.1.0").ResolveDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,8 +42,8 @@ func TestImageResolve(t *testing.T) {
 }
 
 func TestImageResolves(t *testing.T) {
-	references := ContainerImageReferences{*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.0.2`),
-		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.0.1`)}
+	references := ContainerImageReferences{*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`),
+		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`)}
 
 	resolved, err := references.ResolveDigest()
 	if err != nil {

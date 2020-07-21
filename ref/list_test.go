@@ -17,11 +17,11 @@ func TestListReferenceSimple(t *testing.T) {
 
 func TestListReferenceMultiple(t *testing.T) {
 	input := []byte(`this is one eu.gcr.io/binxio/paas-monitor:v0.3.1 reference
-and this is another mvanholsteijn/paas-monitor:v0.1.0
+and this is another mvanholsteijn/paas-monitor:3.1.0
 and this is just a directory Name mvanholsteijn/paas-monitor, which should
 not be changed`)
 	expect := []ContainerImageReference{*MustNewContainerImageReference(`eu.gcr.io/binxio/paas-monitor:v0.3.1`),
-		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:v0.1.0`)}
+		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`)}
 
 	result := FindAllContainerImageReference(input)
 	for i, ref := range result {

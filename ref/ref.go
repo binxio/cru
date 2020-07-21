@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	imageReferencePattern = regexp.MustCompile(`(?P<Name>[a-zA-Z0-9\-\.]+(:[0-9]+)?/[\w\-/]+)((:(?P<Tag>[\w][\w\.-]+))|(@(?P<Digest>[a-zA-Z][a-zA-Z0-9]*:[0-9a-fA-F+\.-_]{32,})))`)
+	imageReferencePattern = regexp.MustCompile(`(?P<Name>[a-zA-Z0-9\-\.]+(:[0-9]+)?/[\w\-/]+)((:(?P<Tag>[\w][\w\.-]+))|(@(?P<Digest>[a-zA-Z][a-zA-Z0-9]*:[0-9a-fA-F+\.\-_]{32,})))`)
 	submatchNames         = imageReferencePattern.SubexpNames()
 )
 
@@ -123,7 +123,7 @@ func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
 	return result, nil
 }
 
-func UpdateReference(content []byte, reference ContainerImageReference) ([]byte, bool) {
+func UpdateReference(content []byte, reference ContainerImageReference, filename string, verbose bool) ([]byte, bool) {
 	previous := 0
 	updated := false
 	result := bytes.Buffer{}
@@ -134,12 +134,16 @@ func UpdateReference(content []byte, reference ContainerImageReference) ([]byte,
 		if err == nil && r.Name == reference.Name {
 			if r.String() != reference.String() {
 				updated = true
-				log.Printf("INFO: updating reference %s to %s", r, reference)
+				if verbose {
+					log.Printf("INFO: updating reference %s to %s in %s", r, reference, filename)
+				}
 				result.Write(content[previous:match[0]])
 				result.Write([]byte(reference.String()))
 				previous = match[1]
 			} else {
-				log.Printf("INFO: %s already up-to-date", r)
+				if verbose {
+					log.Printf("INFO: %s already up-to-date in %s", r, filename)
+				}
 			}
 		}
 	}
@@ -150,11 +154,11 @@ func UpdateReference(content []byte, reference ContainerImageReference) ([]byte,
 	return result.Bytes(), updated
 }
 
-func UpdateReferences(content []byte, references ContainerImageReferences) ([]byte, bool) {
+func UpdateReferences(content []byte, references ContainerImageReferences, filename string, verbose bool) ([]byte, bool) {
 	updated := false
 	changed := false
 	for _, ref := range references {
-		if content, changed = UpdateReference(content, ref); changed {
+		if content, changed = UpdateReference(content, ref, filename, verbose); changed {
 			updated = true
 		}
 	}
