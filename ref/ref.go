@@ -111,7 +111,7 @@ func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
 	for _, tag := range tags {
 		tagged, err := ContainerImageReference{Name: r.Name, Tag: tag}.ResolveDigest()
 		if err != nil {
-			log.Printf("skipping %s, %s", tag, err)
+			log.Printf("WARNING: could not get digest for image tag %s for %s, %s", tag, r.Name, err)
 			err = nil
 			continue
 		}
@@ -134,9 +134,12 @@ func UpdateReference(content []byte, reference ContainerImageReference) ([]byte,
 		if err == nil && r.Name == reference.Name {
 			if r.String() != reference.String() {
 				updated = true
+				log.Printf("INFO: updating reference %s to %s", r, reference)
 				result.Write(content[previous:match[0]])
 				result.Write([]byte(reference.String()))
 				previous = match[1]
+			} else {
+				log.Printf("INFO: %s already up-to-date", r)
 			}
 		}
 	}
