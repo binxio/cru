@@ -123,7 +123,7 @@ func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
 	return result, nil
 }
 
-func UpdateReference(content []byte, reference ContainerImageReference) ([]byte, bool) {
+func UpdateReference(content []byte, reference ContainerImageReference, filename string) ([]byte, bool) {
 	previous := 0
 	updated := false
 	result := bytes.Buffer{}
@@ -134,12 +134,12 @@ func UpdateReference(content []byte, reference ContainerImageReference) ([]byte,
 		if err == nil && r.Name == reference.Name {
 			if r.String() != reference.String() {
 				updated = true
-				log.Printf("INFO: updating reference %s to %s", r, reference)
+				log.Printf("INFO: updating reference %s to %s in %s", r, reference, filename)
 				result.Write(content[previous:match[0]])
 				result.Write([]byte(reference.String()))
 				previous = match[1]
 			} else {
-				log.Printf("INFO: %s already up-to-date", r)
+				log.Printf("INFO: %s already up-to-date in %s", r, filename)
 			}
 		}
 	}
@@ -150,11 +150,11 @@ func UpdateReference(content []byte, reference ContainerImageReference) ([]byte,
 	return result.Bytes(), updated
 }
 
-func UpdateReferences(content []byte, references ContainerImageReferences) ([]byte, bool) {
+func UpdateReferences(content []byte, references ContainerImageReferences, filename string) ([]byte, bool) {
 	updated := false
 	changed := false
 	for _, ref := range references {
-		if content, changed = UpdateReference(content, ref); changed {
+		if content, changed = UpdateReference(content, ref, filename); changed {
 			updated = true
 		}
 	}

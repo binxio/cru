@@ -60,9 +60,8 @@ func Update(c *Cru, filename string) error {
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
-	content, updated := ref.UpdateReferences(content, c.imageReferences)
+	content, updated := ref.UpdateReferences(content, c.imageReferences, filename)
 	if updated {
-		log.Printf("INFO: updating %s\n", filename)
 		if !c.dryRun {
 			err := ioutil.WriteFile(filename, content, 0644)
 			if err != nil {
