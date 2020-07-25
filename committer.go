@@ -14,6 +14,7 @@ import (
 
 
 func (c *Cru) Commit() error {
+	committed := 0
 	workTrees := make(map[string]*git.Worktree)
 	toCommit := make(map[string]*git.Worktree)
 
@@ -21,8 +22,10 @@ func (c *Cru) Commit() error {
 		return nil
 	}
 	if len(c.updatedFiles) == 0 {
-		log.Printf("no files updated by cru\n")
+		log.Printf("INFO: no files updated by cru\n")
+		return nil
 	}
+
 	absolutePaths := make([]string, len(c.updatedFiles), len(c.updatedFiles))
 	for i, path := range c.updatedFiles {
 
@@ -34,15 +37,17 @@ func (c *Cru) Commit() error {
 		}
 	}
 
-	for _, path := range absolutePaths {
+	for i, path := range absolutePaths {
 
+		relativePath := c.updatedFiles[i]
 		path = filepath.Clean(path)
 		root := filepath.Dir(path)
+		added := false
 		repository, err := git.PlainOpenWithOptions(root, &git.PlainOpenOptions{DetectDotGit: true})
 		if err != nil {
 			if err == git.ErrRepositoryNotExists {
 				if c.verbose {
-					log.Printf("INFO: %s is not under control of git\n", path)
+					log.Printf("INFO: %s is not under control of git\n", relativePath)
 				}
 				continue
 			}
@@ -58,15 +63,20 @@ func (c *Cru) Commit() error {
 			return err
 		}
 
-		if status.IsClean() {
-			log.Printf("INFO: %s was updated but not under control of git", path)
-			return nil
-		}
 		for p, _ := range status {
 			if path == filepath.Join(wt.Filesystem.Root(), p) {
+				added = true
 				wt.Add(p)
-				log.Printf("INFO: add %s to commit\n", p)
 				toCommit[wt.Filesystem.Root()] = wt
+				committed = committed + 1
+			}
+		}
+
+		if c.verbose {
+			if added {
+				log.Printf("INFO: add %s to commit\n", relativePath)
+			} else {
+				log.Printf("INFO:%s updated but not added to commit\n", relativePath)
 			}
 		}
 	}
@@ -88,5 +98,6 @@ func (c *Cru) Commit() error {
 
 		log.Printf("INFO: committed changes to %s as %s", root, (hash.String())[0:6])
 	}
+	log.Printf("INFO: %d files updated, %d committed", len(c.updatedFiles), committed)
 	return nil
 }
