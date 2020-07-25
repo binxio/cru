@@ -4,9 +4,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"time"
-
 	"log"
-
 	"path/filepath"
 )
 
@@ -92,7 +90,9 @@ func (c *Cru) Commit() error {
 			return err
 		}
 
-		log.Printf("INFO: committed changes to %s as %s", root, (hash.String())[0:6])
+		if c.verbose {
+			log.Printf("INFO: changes in %s committed with %s", root, hash.String()[0:7])
+		}
 	}
 	return nil
 }
