@@ -42,7 +42,7 @@ func (c *Cru) Commit() error {
 		if err != nil {
 			if err == git.ErrRepositoryNotExists {
 				if c.verbose {
-					log.Printf("%s is not under control of git\n", path)
+					log.Printf("INFO: %s is not under control of git\n", path)
 				}
 				continue
 			}
