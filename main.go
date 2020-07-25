@@ -16,9 +16,10 @@ type Cru struct {
 	verbose         bool
 	resolveDigest   bool
 	resolveTag      bool
-	commitMessage	string
+	commitMessage   string
 	imageReferences ref.ContainerImageReferences
-	updatedFiles	[]string
+	updatedFiles    []string
+	committedFiles  []string
 }
 
 func (c *Cru) AssertPathsExists() {
@@ -161,13 +162,21 @@ Options:
 			log.Fatal(err)
 		}
 	} else if args["update"].(bool) {
-		if err = cru.Walk(Update);  err != nil {
+		if err = cru.Walk(Update); err != nil {
 			log.Fatal(err)
 		}
-		if cru.commitMessage != "" {
-			if err = cru.Commit(); err != nil {
-				log.Fatal(err)
+		if len(cru.updatedFiles) > 0 {
+			if cru.commitMessage != "" {
+				if err = cru.Commit(); err != nil {
+					log.Fatal(err)
+				}
+				log.Printf("INFO: %d out of %d updated files committed", len(cru.committedFiles), len(cru.updatedFiles))
+			} else {
+				log.Printf("INFO: %d files updated", len(cru.updatedFiles))
 			}
+		} else {
+			log.Println("INFO: no files were updated by cru")
 		}
+
 	}
 }

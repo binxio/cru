@@ -1,7 +1,6 @@
 package main
 
 import (
-
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"time"
@@ -9,12 +8,9 @@ import (
 	"log"
 
 	"path/filepath"
-
 )
 
-
 func (c *Cru) Commit() error {
-	committed := 0
 	workTrees := make(map[string]*git.Worktree)
 	toCommit := make(map[string]*git.Worktree)
 
@@ -67,8 +63,8 @@ func (c *Cru) Commit() error {
 			if path == filepath.Join(wt.Filesystem.Root(), p) {
 				added = true
 				wt.Add(p)
+				c.committedFiles = append(c.committedFiles, p)
 				toCommit[wt.Filesystem.Root()] = wt
-				committed = committed + 1
 			}
 		}
 
@@ -98,6 +94,5 @@ func (c *Cru) Commit() error {
 
 		log.Printf("INFO: committed changes to %s as %s", root, (hash.String())[0:6])
 	}
-	log.Printf("INFO: %d files updated, %d committed", len(c.updatedFiles), committed)
 	return nil
 }

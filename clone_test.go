@@ -22,30 +22,29 @@ func TestClone(t *testing.T) {
 	signer, err := ssh.ParsePrivateKey([]byte(sshKey))
 	auth := &go_git_ssh.PublicKeys{User: "git", Signer: signer}
 	r, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
-		URL: "git@github.com:binxio/google-pubsub-testbench.git",
+		URL:  "git@github.com:binxio/google-pubsub-testbench.git",
 		Auth: auth,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-
 
 	err = r.Fetch(&git.FetchOptions{
 		RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
-		Auth: auth,
+		Auth:     auth,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	wt,err := r.Worktree()
+	wt, err := r.Worktree()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	err = wt.Checkout(&git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName("cloud_implementation"),
-		Force: true,
+		Force:  true,
 	})
 	if err != nil {
 		t.Fatal(err)
