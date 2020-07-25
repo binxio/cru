@@ -20,15 +20,15 @@ func TestUpdateReferenceSimple(t *testing.T) {
 
 func TestUpdateReferenceMultiple(t *testing.T) {
 	input := []byte(`this is one gcr.io/binx-io-public/paas-monitor:v0.3.1 reference
-and this is another mvanholsteijn/paas-monitor:latest
+and this is another mvanholsteijn/paas-monitor:3.1.0
 and this is just a directory Name mvanholsteijn/paas-monitor, which should
 not be changed`)
 	expect := []byte(`this is one gcr.io/binx-io-public/paas-monitor:v1.0.0 reference
-and this is another mvanholsteijn/paas-monitor:latest
+and this is another mvanholsteijn/paas-monitor:3.1.0
 and this is just a directory Name mvanholsteijn/paas-monitor, which should
 not be changed`)
 	references := []ContainerImageReference{*MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v1.0.0`),
-		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:latest`)}
+		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`)}
 
 	result, updated := UpdateReferences(input, references)
 	if !updated {
