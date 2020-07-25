@@ -16,7 +16,9 @@ type Cru struct {
 	verbose         bool
 	resolveDigest   bool
 	resolveTag      bool
+	commitMessage	string
 	imageReferences ref.ContainerImageReferences
+	updatedFiles	[]string
 }
 
 func (c *Cru) AssertPathsExists() {
@@ -67,6 +69,7 @@ func Update(c *Cru, filename string) error {
 			if err != nil {
 				return fmt.Errorf("failed to overwrite %s with updated references, %s", filename, err)
 			}
+			c.updatedFiles = append(c.updatedFiles, filename)
 		}
 	}
 	return nil
@@ -77,7 +80,8 @@ func main() {
 
 Usage:
   cru list   [--verbose] [--no-filename] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--commit=MESSAGE] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru server
   cru -h | --help
 
 Options:
@@ -88,6 +92,7 @@ Options:
 --dry-run			pretend to run the update, make no changes.
 --all               replace all container image reference tags with "latest"
 --verbose			show more output.
+--commit=MESSAGE	commit the changes with the specified message.
 
 `
 	cru := Cru{}
@@ -102,6 +107,9 @@ Options:
 	cru.noFilename = args["--no-filename"].(bool)
 	cru.resolveDigest = args["--resolve-digest"].(bool)
 	cru.resolveTag = args["--resolve-tag"].(bool)
+	if args["--commit"] != nil {
+		cru.commitMessage = args["--commit"].(string)
+	}
 	cru.imageReferences = make(ref.ContainerImageReferences, 0)
 
 	cru.AssertPathsExists()
@@ -149,10 +157,17 @@ Options:
 	}
 
 	if args["list"].(bool) {
-		cru.Walk(List)
-	} else if args["update"].(bool) {
-		if cru.verbose {
+		if err = cru.Walk(List); err != nil {
+			log.Fatal(err)
 		}
-		cru.Walk(Update)
+	} else if args["update"].(bool) {
+		if err = cru.Walk(Update);  err != nil {
+			log.Fatal(err)
+		}
+		if cru.commitMessage != "" {
+			if err = cru.Commit(); err != nil {
+				log.Fatal(err)
+			}
+		}
 	}
 }
