@@ -87,14 +87,13 @@ func main() {
 
 Usage:
   cru list   [--verbose] [--no-filename] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag|--bump)] [--commit=MESSAGE] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--commit=MESSAGE] (--all | --image-reference=REFERENCE ...) [PATH] ...
   cru -h | --help
 
 Options:
 --no-filename	    do not print the filename.
 --resolve-digest 	change the image reference tag to a reference of the digest of the image.
 --resolve-tag		change the image reference tag to the first alternate tag of the reference.
---bump              change the image reference tag to the next available version                
 --image-reference=REFERENCE to update.
 --dry-run			pretend to run the update, make no changes.
 --all               replace all container image reference tags with "latest"
@@ -156,10 +155,6 @@ Options:
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
-
-	if cru.Bump {
-		// todo
 	}
 
 	if cru.List {
