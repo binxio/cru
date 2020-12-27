@@ -12,7 +12,7 @@ func (c *Cru) Commit() error {
 	workTrees := make(map[string]*git.Worktree)
 	toCommit := make(map[string]*git.Worktree)
 
-	if c.commitMessage == "" {
+	if c.CommitMessage == "" {
 		return nil
 	}
 	if len(c.updatedFiles) == 0 {
@@ -40,7 +40,7 @@ func (c *Cru) Commit() error {
 		repository, err := git.PlainOpenWithOptions(root, &git.PlainOpenOptions{DetectDotGit: true})
 		if err != nil {
 			if err == git.ErrRepositoryNotExists {
-				if c.verbose {
+				if c.Verbose {
 					log.Printf("INFO: %s is not under control of git\n", relativePath)
 				}
 				continue
@@ -66,7 +66,7 @@ func (c *Cru) Commit() error {
 			}
 		}
 
-		if c.verbose {
+		if c.Verbose {
 			if added {
 				log.Printf("INFO: add %s to commit\n", relativePath)
 			} else {
@@ -77,7 +77,7 @@ func (c *Cru) Commit() error {
 
 	for root, wt := range toCommit {
 
-		hash, err := wt.Commit(c.commitMessage, &git.CommitOptions{
+		hash, err := wt.Commit(c.CommitMessage, &git.CommitOptions{
 			Author: &object.Signature{
 				Name:  "cru",
 				Email: "cru@binx.io",
@@ -90,7 +90,7 @@ func (c *Cru) Commit() error {
 			return err
 		}
 
-		if c.verbose {
+		if c.Verbose {
 			log.Printf("INFO: changes in %s committed with %s", root, hash.String()[0:7])
 		}
 	}
