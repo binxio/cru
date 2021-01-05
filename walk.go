@@ -57,7 +57,7 @@ func (i GitIgnorePatterns) Ignore(filename string, isDir bool) bool {
 }
 
 func (c *Cru) Walk(visitor Visitor) error {
-	for _, path := range c.paths {
+	for _, path := range c.Path {
 		info, err := os.Stat(path)
 		if err != nil {
 			return fmt.Errorf("%s is not a valid path or is not readable, %s", path, err)
@@ -72,19 +72,19 @@ func (c *Cru) Walk(visitor Visitor) error {
 					if gitIgnorePattern.Ignore(p, info.IsDir()) {
 
 						if info.IsDir() {
-							if c.verbose {
+							if c.Verbose {
 								log.Printf("INFO: ignoring directory %s\n", p)
 							}
 							return filepath.SkipDir
 						}
-						if c.verbose {
+						if c.Verbose {
 							log.Printf("INFO: ignoring file %s\n", p)
 						}
 						return nil
 					}
 
 					if info.IsDir() && filepath.Base(p) == ".git" {
-						if c.verbose {
+						if c.Verbose {
 							log.Printf("INFO: ignoring .git directory\n")
 						}
 						return filepath.SkipDir
@@ -100,7 +100,7 @@ func (c *Cru) Walk(visitor Visitor) error {
 							return err
 						}
 					} else {
-						if c.verbose {
+						if c.Verbose {
 							log.Printf("INFO: skipping %s: not a text file\n", p)
 						}
 					}
