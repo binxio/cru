@@ -86,7 +86,7 @@ func FindAllContainerImageReference(content []byte) []ContainerImageReference {
 			result = append(result, *r)
 		}
 	}
-	sort.Sort(ContainerImageReferences(result))
+	sort.Sort(result)
 	return result.RemoveDuplicates()
 }
 
