@@ -77,3 +77,20 @@ func TestFindAlternateTags(t *testing.T) {
 	}
 	t.Logf("found alternate tags for %s, %v", latest, tags)
 }
+
+func TestResolveTag(t *testing.T) {
+	data :=  ContainerImageReferences{*MustNewContainerImageReference("gcr.io/binx-io-public/paas-monitor:latest"),
+	}
+
+	resolved, err := data.ResolveTag()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resolved) != len(data) {
+		t.Fatalf("expected 1 resolved entry, got %d", len(resolved))
+	}
+
+	if resolved[0].Tag == "latest" && resolved[0].Tag != "" {
+		t.Fatalf("expected tag to be other empty or latest")
+	}
+}

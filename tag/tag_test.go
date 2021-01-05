@@ -23,6 +23,9 @@ func TestMakeTag(t *testing.T) {
 		if !tag.Equals(outputs[i]) {
 			t.Fatalf("expected tag to be %v, got %v", outputs[i], tag)
 		}
+		if tag.String() != expect.Literal {
+			t.Fatalf("expected tag.String() to be %s, got %s", expect.Literal, tag.String())
+		}
 	}
 }
 
