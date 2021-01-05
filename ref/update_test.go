@@ -9,7 +9,7 @@ func TestUpdateReferenceSimple(t *testing.T) {
 	simple := []byte(`gcr.io/binx-io-public/paas-monitor:v0.3.1`)
 	expect := []byte(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
 	ref := MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
-	result, updated := UpdateReference(simple, *ref)
+	result, updated := UpdateReference(simple, *ref, "-")
 	if !updated {
 		t.Errorf("expected the reference to be updated\n")
 	}
@@ -30,7 +30,7 @@ not be changed`)
 	references := []ContainerImageReference{*MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v1.0.0`),
 		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:v0.2.0-beta`)}
 
-	result, updated := UpdateReferences(input, references)
+	result, updated := UpdateReferences(input, references, "-")
 	if !updated {
 		t.Errorf("expected the references to be updated\n")
 	}
@@ -81,7 +81,7 @@ resource "google_cloud_run_service" "app" {
 }
 `)
 	ref, _ := NewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
-	result, updated := UpdateReference(input, *ref)
+	result, updated := UpdateReference(input, *ref, "-")
 	if !updated {
 		t.Errorf("expected the reference to be updated\n")
 	}
