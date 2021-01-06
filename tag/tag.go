@@ -23,11 +23,21 @@ type Tags []Tag
 type TagCategories map[string]Tags
 
 var (
-	semVerRegExp              = regexp.MustCompile(`(?m)^(?P<prefix>[^0-9]*)(?P<major>[0-9]+)(\.(?P<minor>[0-9]+))?(\.(?P<patch>[0-9]+))?(?P<suffix>\W.*)?$`)
-	semVerRegExpNames         = semVerRegExp.SubexpNames()
-	tagCategoryCache          = map[string]TagCategories{}
-	isGitDescribeSuffixRegExp = regexp.MustCompile(`(?m)^-((?P<order>[0-9]+)-g)?(?P<sha>[0-9a-f]{6,})(?P<dirty>-dirty)?$`)
+	semVerRegExp                 = regexp.MustCompile(`(?m)^(?P<prefix>[^0-9]*)(?P<major>[0-9]+)(\.(?P<minor>[0-9]+))?(\.(?P<patch>[0-9]+))?(?P<suffix>\W.*)?$`)
+	semVerRegExpNames            = semVerRegExp.SubexpNames()
+	tagCategoryCache             = map[string]TagCategories{}
+	gitDescribeSuffixRegExp      = regexp.MustCompile(`(?m)^-((?P<order>[0-9]+)-g)?(?P<sha>[0-9a-f]{6,})(?P<dirty>-dirty)?$`)
+	gitDescribeOrderSubExprIndex = findStringIndex(gitDescribeSuffixRegExp.SubexpNames(), "order")
 )
+
+func findStringIndex(a []string, item string) int {
+	for i, s := range a {
+		if s == item {
+			return i
+		}
+	}
+	return -1
+}
 
 func MakeTag(tag string) Tag {
 	var result = Tag{
@@ -56,8 +66,13 @@ func MakeTag(tag string) Tag {
 		result.Prefix = tag
 	}
 	if result.Prefix != "" || result.Suffix != "" {
-		if isGitDescribeSuffixRegExp.MatchString(result.Suffix) {
-			result.Category = fmt.Sprintf("%s|%s", result.Prefix, "<git-commit-sha>")
+		if m := gitDescribeSuffixRegExp.FindStringSubmatch(result.Suffix); m != nil {
+			if m[gitDescribeOrderSubExprIndex] == "" {
+				result.Category = fmt.Sprintf("%s|%s", result.Prefix, "<git-commit-sha>")
+			} else {
+				result.Category = fmt.Sprintf("%s|%s", result.Prefix, "<git-describe>")
+			}
+
 		} else {
 			result.Category = fmt.Sprintf("%s|%s", result.Prefix, result.Suffix)
 		}

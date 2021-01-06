@@ -16,7 +16,7 @@ func TestMakeTag(t *testing.T) {
 		{Literal: "latest", Version: []int{}, Prefix: "latest", Category: "latest|"},
 		{Literal: "27efa74b9c", Version: []int{}, Prefix: "27efa74b9c", Category: "27efa74b9c|"},
 		{Literal: "v0.5-f1c5941", Version: []int{0, 5}, Prefix: "v", Suffix: "-f1c5941", Category: "v|<git-commit-sha>"},
-		{Literal: "0.6.1-1-gf1c5941", Version: []int{0, 6, 1}, Suffix: "-1-gf1c5941", Category: "|<git-commit-sha>"},
+		{Literal: "0.6.1-1-gf1c5941", Version: []int{0, 6, 1}, Suffix: "-1-gf1c5941", Category: "|<git-describe>"},
 	}
 	for i, expect := range outputs {
 		tag := MakeTag(expect.Literal)
