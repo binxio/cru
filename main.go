@@ -8,6 +8,7 @@ import (
 	"gopkg.in/src-d/go-billy.v4"
 	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io"
 	"io/ioutil"
 	"log"
@@ -30,6 +31,7 @@ type Cru struct {
 	Level          string
 	Url            string `docopt:"--repository"`
 	CommitMsg      string `docopt:"--commit"`
+	Branch         string `docopt:"--branch"`
 	imageRefs      ref.ContainerImageReferences
 	updatedFiles   []string
 	committedFiles []string
@@ -117,36 +119,7 @@ func Update(c *Cru, filename string) error {
 	return nil
 }
 
-func main() {
-	usage := `cru - container image reference updater
-
-Usage:
-  cru list   [--verbose] [--no-filename] [--repository=URL] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
-
-Options:
---no-filename	    do not print the filename.
---resolve-digest 	change the image reference tag to a reference of the digest of the image.
---resolve-tag		change the image reference tag to the first alternate tag of the reference.
---image-reference=REFERENCE to update.
---dry-run			pretend to run the update, make no changes.
---all               replace all container image reference tags with "latest"
---verbose			show more output.
---commit=MESSAGE	commit the changes with the specified message.
---repository=URL    to read and/or update.
-
-`
-	cru := Cru{}
-
-	args, err := docopt.ParseDoc(usage)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err = args.Bind(&cru); err != nil {
-		log.Fatal(err)
-	}
-
+func (cru *Cru) ConnectToRepository() {
 	if cru.Url != "" {
 		var progressReporter io.Writer = os.Stderr
 		if !cru.Verbose {
@@ -162,7 +135,29 @@ Options:
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		cru.workTree = wt
+		if cru.Branch != "" {
+			var branch *plumbing.Reference
+			if branches, err := repository.Branches(); err == nil {
+				branches.ForEach(func(ref *plumbing.Reference) error {
+					if ref.Name().Short() == cru.Branch {
+						branch = ref
+					}
+					return nil
+				})
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+			if branch == nil {
+				log.Fatalf("ERROR: branch %s not found", cru.Branch)
+			}
+			err = wt.Checkout(&git.CheckoutOptions{Branch: branch.Name()})
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 		cru.filesystem = &wt.Filesystem
 		cru.cwd = "/"
 	} else {
@@ -174,7 +169,40 @@ Options:
 		fs := osfs.New("/")
 		cru.filesystem = &fs
 	}
+}
 
+func main() {
+	usage := `cru - container image reference updater
+
+Usage:
+  cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]] [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
+
+Options:
+--no-filename	    do not print the filename.
+--resolve-digest 	change the image reference tag to a reference of the digest of the image.
+--resolve-tag		change the image reference tag to the first alternate tag of the reference.
+--image-reference=REFERENCE to update.
+--dry-run			pretend to run the update, make no changes.
+--all               replace all container image reference tags with "latest"
+--verbose			show more output.
+--commit=MESSAGE	commit the changes with the specified message.
+--repository=URL    to read and/or update.
+--branch=BRANCH     to update.
+
+`
+	cru := Cru{}
+
+	args, err := docopt.ParseDoc(usage)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err = args.Bind(&cru); err != nil {
+		log.Fatal(err)
+	}
+
+	cru.ConnectToRepository()
 	cru.imageRefs = make(ref.ContainerImageReferences, 0)
 
 	cru.AssertPathsExists()

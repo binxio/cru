@@ -148,8 +148,10 @@ func Clone(url string, progress io.Writer) (r *git.Repository, err error) {
 		}
 		err = r.Fetch(&git.FetchOptions{
 			RefSpecs: []config.RefSpec{"refs/*:refs/*"},
-			Depth:    1,
+			Progress: progress,
+			Depth:    2,
 			Auth:     auth,
+			Force:    true,
 		})
 		if err != nil && err != git.NoErrAlreadyUpToDate {
 			return nil, fmt.Errorf("ERROR: failed to fetch all branches from %s, %s", url, err)
