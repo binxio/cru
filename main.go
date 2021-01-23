@@ -1,16 +1,22 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/binxio/cru/ref"
 	"github.com/docopt/docopt-go"
+	"gopkg.in/src-d/go-billy.v4"
+	"gopkg.in/src-d/go-billy.v4/osfs"
+	"gopkg.in/src-d/go-git.v4"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 type Cru struct {
-	Paths          []string
+	Path           []string
 	List           bool
 	Update         bool
 	Bump           bool
@@ -19,29 +25,34 @@ type Cru struct {
 	Verbose        bool
 	ResolveDigest  bool
 	ResolveTag     bool
-	CommitMessage  string
-	All			   bool
-	ImageReferences []string
+	All            bool
+	ImageReference []string
 	Level          string
+	Url            string `docopt:"--repository"`
+	CommitMsg      string `docopt:"--commit"`
 	imageRefs      ref.ContainerImageReferences
 	updatedFiles   []string
 	committedFiles []string
+	repository     *git.Repository
+	workTree       *git.Worktree
+	filesystem     *billy.Filesystem
+	cwd            string
 }
 
 func (c *Cru) AssertPathsExists() {
-	if len(c.Paths) == 0 {
-		c.Paths = append(c.Paths, ".")
+	if len(c.Path) == 0 {
+		c.Path = append(c.Path, ".")
 	}
 
-	for _, path := range c.Paths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+	for _, path := range c.Path {
+		if _, err := (*c.filesystem).Stat(path); os.IsNotExist(err) {
 			log.Fatalf("ERROR: %s is not a file or directory\n", path)
 		}
 	}
 }
 
 func CollectReferences(c *Cru, filename string) error {
-	content, err := ioutil.ReadFile(filename)
+	content, err := c.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
@@ -49,8 +60,19 @@ func CollectReferences(c *Cru, filename string) error {
 	return nil
 }
 
+func (c *Cru) ReadFile(filename string) (content []byte, err error) {
+	var file billy.File
+	file, err = (*c.filesystem).Open(filename)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	return ioutil.ReadAll(file)
+}
+
 func List(c *Cru, filename string) error {
-	content, err := ioutil.ReadFile(filename)
+
+	content, err := c.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
@@ -58,6 +80,9 @@ func List(c *Cru, filename string) error {
 		if c.NoFilename {
 			fmt.Printf("%s\n", ref.String())
 		} else {
+			if relative, err := filepath.Rel(c.cwd, filename); err == nil {
+				filename = relative
+			}
 			fmt.Printf("%s:%s\n", filename, ref.String())
 		}
 	}
@@ -65,7 +90,7 @@ func List(c *Cru, filename string) error {
 }
 
 func Update(c *Cru, filename string) error {
-	content, err := ioutil.ReadFile(filename)
+	content, err := c.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
 	}
@@ -86,9 +111,8 @@ func main() {
 	usage := `cru - container image reference updater
 
 Usage:
-  cru list   [--verbose] [--no-filename] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--commit=MESSAGE] (--all | --image-reference=REFERENCE ...) [PATH] ...
-  cru -h | --help
+  cru list   [--verbose] [--no-filename] [--repository=URL] [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL] [--commit=MESSAGE] (--all | --image-reference=REFERENCE ...) [PATH] ...
 
 Options:
 --no-filename	    do not print the filename.
@@ -99,6 +123,7 @@ Options:
 --all               replace all container image reference tags with "latest"
 --verbose			show more output.
 --commit=MESSAGE	commit the changes with the specified message.
+--repository=URL    to read and/or update.
 
 `
 	cru := Cru{}
@@ -111,6 +136,35 @@ Options:
 	if err = args.Bind(&cru); err != nil {
 		log.Fatal(err)
 	}
+
+	if cru.Url != "" {
+		var progressReporter io.Writer = os.Stderr
+		if !cru.Verbose {
+			progressReporter = &bytes.Buffer{}
+		}
+		repository, err := Clone(cru.Url, progressReporter)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cru.repository = repository
+
+		wt, err := repository.Worktree()
+		if err != nil {
+			log.Fatal(err)
+		}
+		cru.workTree = wt
+		cru.filesystem = &wt.Filesystem
+		cru.cwd = "/"
+	} else {
+		cwd, err := filepath.Abs(".")
+		if err != nil {
+			log.Fatal(err)
+		}
+		cru.cwd = cwd
+		fs := osfs.New("/")
+		cru.filesystem = &fs
+	}
+
 	cru.imageRefs = make(ref.ContainerImageReferences, 0)
 
 	cru.AssertPathsExists()
@@ -133,7 +187,7 @@ Options:
 		}
 	}
 
-	for _, r := range cru.ImageReferences {
+	for _, r := range cru.ImageReference {
 		r, err := ref.NewContainerImageReference(r)
 		if err != nil {
 			log.Fatalf("ERROR: %s", err)
@@ -166,7 +220,7 @@ Options:
 			log.Fatal(err)
 		}
 		if len(cru.updatedFiles) > 0 {
-			if cru.CommitMessage != "" {
+			if cru.CommitMsg != "" {
 				if err = cru.Commit(); err != nil {
 					log.Fatal(err)
 				}

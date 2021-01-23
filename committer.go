@@ -3,16 +3,16 @@ package main
 import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"time"
 	"log"
 	"path/filepath"
+	"time"
 )
 
 func (c *Cru) Commit() error {
 	workTrees := make(map[string]*git.Worktree)
 	toCommit := make(map[string]*git.Worktree)
 
-	if c.CommitMessage == "" {
+	if c.CommitMsg == "" {
 		return nil
 	}
 	if len(c.updatedFiles) == 0 {
@@ -77,7 +77,7 @@ func (c *Cru) Commit() error {
 
 	for root, wt := range toCommit {
 
-		hash, err := wt.Commit(c.CommitMessage, &git.CommitOptions{
+		hash, err := wt.Commit(c.CommitMsg, &git.CommitOptions{
 			Author: &object.Signature{
 				Name:  "cru",
 				Email: "cru@binx.io",
