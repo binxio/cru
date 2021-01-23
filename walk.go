@@ -84,6 +84,16 @@ func (c *Cru) AbsPath(filename string) string {
 	return filepath.Clean(filepath.Join(c.cwd, filename))
 }
 
+func (c *Cru) RelPath(filename string) string {
+	if !filepath.IsAbs(filename) {
+		return filename
+	}
+	if rel, err := filepath.Rel(c.cwd, filename); err == nil {
+		return rel
+	}
+	return filename
+}
+
 func (c *Cru) Walk(visitor Visitor) (err error) {
 	for _, p := range c.Path {
 		filename := c.AbsPath(p)

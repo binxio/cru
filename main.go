@@ -70,6 +70,16 @@ func (c *Cru) ReadFile(filename string) (content []byte, err error) {
 	return ioutil.ReadAll(file)
 }
 
+func (c *Cru) WriteFile(filename string, content []byte, perm os.FileMode) error {
+	file, err := (*c.filesystem).OpenFile(filename, os.O_WRONLY, perm)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.Write(content)
+	return err
+}
+
 func List(c *Cru, filename string) error {
 
 	content, err := c.ReadFile(filename)
@@ -92,14 +102,14 @@ func List(c *Cru, filename string) error {
 func Update(c *Cru, filename string) error {
 	content, err := c.ReadFile(filename)
 	if err != nil {
-		return fmt.Errorf("could not read %s, %s", filename, err)
+		return fmt.Errorf("could not read %s, %s", c.RelPath(filename), err)
 	}
-	content, updated := ref.UpdateReferences(content, c.imageRefs, filename, c.Verbose)
+	content, updated := ref.UpdateReferences(content, c.imageRefs, c.RelPath(filename), c.Verbose)
 	if updated {
 		if !c.DryRun {
-			err := ioutil.WriteFile(filename, content, 0644)
+			err := c.WriteFile(filename, content, 0644)
 			if err != nil {
-				return fmt.Errorf("failed to overwrite %s with updated references, %s", filename, err)
+				return fmt.Errorf("failed to overwrite %s with updated references, %s", c.RelPath(filename), err)
 			}
 			c.updatedFiles = append(c.updatedFiles, filename)
 		}
