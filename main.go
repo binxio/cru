@@ -122,7 +122,7 @@ func main() {
 
 Usage:
   cru list   [--verbose] [--no-filename] [--repository=URL] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL] [--commit=MESSAGE] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [[--repository=URL] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
 
 Options:
 --no-filename	    do not print the filename.
@@ -230,13 +230,11 @@ Options:
 			log.Fatal(err)
 		}
 		if len(cru.updatedFiles) > 0 {
+			log.Printf("INFO: updated a total of %d files", len(cru.updatedFiles))
 			if cru.CommitMsg != "" {
 				if err = cru.Commit(); err != nil {
 					log.Fatal(err)
 				}
-				log.Printf("INFO: %d out of %d updated files committed", len(cru.committedFiles), len(cru.updatedFiles))
-			} else {
-				log.Printf("INFO: %d files updated", len(cru.updatedFiles))
 			}
 		} else {
 			log.Println("INFO: no files were updated by cru")

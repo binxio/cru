@@ -4,80 +4,28 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"log"
-	"path/filepath"
 	"time"
 )
 
 func (c *Cru) Commit() error {
-	workTrees := make(map[string]*git.Worktree)
-	toCommit := make(map[string]*git.Worktree)
-
 	if c.CommitMsg == "" {
 		return nil
 	}
-	if len(c.updatedFiles) == 0 {
-		log.Printf("INFO: no files updated by cru\n")
-		return nil
-	}
 
-	absolutePaths := make([]string, len(c.updatedFiles), len(c.updatedFiles))
-	for i, path := range c.updatedFiles {
+	for _, path := range c.updatedFiles {
 
-		path, err := filepath.Abs(path)
-		absolutePaths[i] = path
-
+		_, err := c.workTree.Add(path)
 		if err != nil {
 			return err
-		}
-	}
-
-	for i, path := range absolutePaths {
-
-		relativePath := c.updatedFiles[i]
-		path = filepath.Clean(path)
-		root := filepath.Dir(path)
-		added := false
-		repository, err := git.PlainOpenWithOptions(root, &git.PlainOpenOptions{DetectDotGit: true})
-		if err != nil {
-			if err == git.ErrRepositoryNotExists {
-				if c.Verbose {
-					log.Printf("INFO: %s is not under control of git\n", relativePath)
-				}
-				continue
-			}
-			return err
-		}
-		wt, err := repository.Worktree()
-		if err != nil {
-			return err
-		}
-		workTrees[wt.Filesystem.Root()] = wt
-		status, err := wt.Status()
-		if err != nil {
-			return err
-		}
-
-		for p, _ := range status {
-			if path == filepath.Join(wt.Filesystem.Root(), p) {
-				added = true
-				wt.Add(p)
-				c.committedFiles = append(c.committedFiles, p)
-				toCommit[wt.Filesystem.Root()] = wt
-			}
 		}
 
 		if c.Verbose {
-			if added {
-				log.Printf("INFO: add %s to commit\n", relativePath)
-			} else {
-				log.Printf("INFO:%s updated but not added to commit\n", relativePath)
-			}
+			log.Printf("INFO:%s added to commit\n", c.RelPath(path))
 		}
 	}
 
-	for root, wt := range toCommit {
-
-		hash, err := wt.Commit(c.CommitMsg, &git.CommitOptions{
+	if !c.DryRun {
+		hash, err := c.workTree.Commit(c.CommitMsg, &git.CommitOptions{
 			Author: &object.Signature{
 				Name:  "cru",
 				Email: "cru@binx.io",
@@ -85,13 +33,13 @@ func (c *Cru) Commit() error {
 			},
 		})
 		if err != nil {
-			log.Printf("ERROR: failed to commit changes to %s, %s\n", root, err)
-			wt.Reset(nil)
+			log.Printf("ERROR: failed to commit changes, %s\n", err)
+			c.workTree.Reset(nil)
 			return err
 		}
 
 		if c.Verbose {
-			log.Printf("INFO: changes in %s committed with %s", root, hash.String()[0:7])
+			log.Printf("INFO: changes committed with %s", hash.String()[0:7])
 		}
 	}
 	return nil
