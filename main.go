@@ -45,7 +45,7 @@ func (c *Cru) AssertPathsExists() {
 	}
 
 	for _, path := range c.Path {
-		if _, err := (*c.filesystem).Stat(path); os.IsNotExist(err) {
+		if _, err := (*c.filesystem).Stat(c.AbsPath(path)); os.IsNotExist(err) {
 			log.Fatalf("ERROR: %s is not a file or directory\n", path)
 		}
 	}
@@ -107,12 +107,12 @@ func Update(c *Cru, filename string) error {
 	content, updated := ref.UpdateReferences(content, c.imageRefs, c.RelPath(filename), c.Verbose)
 	if updated {
 		if !c.DryRun {
-			err := c.WriteFile(filename, content, 0644)
+			err := c.WriteFile(c.RelPath(filename), content, 0644)
 			if err != nil {
 				return fmt.Errorf("failed to overwrite %s with updated references, %s", c.RelPath(filename), err)
 			}
-			c.updatedFiles = append(c.updatedFiles, filename)
 		}
+		c.updatedFiles = append(c.updatedFiles, filename)
 	}
 	return nil
 }
@@ -122,7 +122,7 @@ func main() {
 
 Usage:
   cru list   [--verbose] [--no-filename] [--repository=URL] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [[--repository=URL] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
 
 Options:
 --no-filename	    do not print the filename.
@@ -234,6 +234,11 @@ Options:
 			if cru.CommitMsg != "" {
 				if err = cru.Commit(); err != nil {
 					log.Fatal(err)
+				}
+				if !IsLocalEndpoint(cru.Url) {
+					if err = cru.Push(); err != nil {
+						log.Fatal(err)
+					}
 				}
 			}
 		} else {
