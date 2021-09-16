@@ -3,8 +3,8 @@ name: Create and publish a Docker image
 
 "on":
   push:
-    tags:
-      - '*'
+    branches:
+      - master
 
 jobs:
   build-and-push-image:
@@ -38,4 +38,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/binxio/cru:${{github.event.release.tag_name}}
+          tags: ghcr.io/binxio/cru:latest
