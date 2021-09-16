@@ -38,4 +38,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/binxio/cru:${{ env.GITHUB_REF }}
+          tags: ghcr.io/binxio/cru:${{github.event.release.tag_name}}
