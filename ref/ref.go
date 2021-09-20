@@ -192,7 +192,7 @@ func (r ContainerImageReference) ResolveDigest() (*ContainerImageReference, erro
 		return nil, fmt.Errorf("failed to get Digest for %s, %s", r, err)
 	}
 
-	return &ContainerImageReference{Name: r.Name, Tag: "", Digest: digest.String()}, nil
+	return &ContainerImageReference{Name: r.Name, Tag: r.Tag, Digest: digest.String()}, nil
 }
 
 func (r *ContainerImageReference) SetTag(tag string) {
