@@ -226,7 +226,7 @@ func (a ContainerImageReferences) ResolveTag() (ContainerImageReferences, error)
 		for _, tag := range tags {
 			if tag != r.Tag {
 				log.Printf("resolving repository %s tag '%s' to '%s'\n", r.Name, r.Tag, tag)
-				result = append(result, ContainerImageReference{Tag: tag, Name:r.Name})
+				result = append(result, ContainerImageReference{Tag: tag, Name: r.Name})
 			}
 		}
 	}

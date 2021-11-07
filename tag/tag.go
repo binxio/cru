@@ -1,12 +1,12 @@
 package tag
 
 import (
-"fmt"
-"github.com/google/go-containerregistry/pkg/crane"
-"github.com/google/go-containerregistry/pkg/name"
-"regexp"
-"sort"
-"strconv"
+	"fmt"
+	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/google/go-containerregistry/pkg/name"
+	"regexp"
+	"sort"
+	"strconv"
 )
 
 type Tag struct {
@@ -142,4 +142,3 @@ func MakeTagCategories(tags TagList) TagCategories {
 	}
 	return result
 }
-

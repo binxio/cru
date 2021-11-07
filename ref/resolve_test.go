@@ -68,7 +68,7 @@ func TestImageResolves(t *testing.T) {
 
 func TestFindAlternateTags(t *testing.T) {
 	latest := MustNewContainerImageReference("gcr.io/binx-io-public/paas-monitor:latest")
-	tags, err :=latest.FindAlternateTags()
+	tags, err := latest.FindAlternateTags()
 	if err != nil {
 		t.Fatal(err)
 	}

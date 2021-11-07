@@ -49,7 +49,7 @@ does that work?
 	references := []ContainerImageReference{*MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v1.0.0`),
 		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`)}
 
-	result, updated := UpdateReferences(input, references,"myfile.txt", true)
+	result, updated := UpdateReferences(input, references, "myfile.txt", true)
 	if !updated {
 		t.Errorf("expected the references to be updated\n")
 	}
@@ -100,7 +100,7 @@ resource "google_cloud_run_service" "app" {
 }
 `)
 	ref, _ := NewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
-	result, updated := UpdateReference(input, *ref,"myfile.txt", true)
+	result, updated := UpdateReference(input, *ref, "myfile.txt", true)
 	if !updated {
 		t.Errorf("expected the reference to be updated\n")
 	}

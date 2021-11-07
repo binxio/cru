@@ -20,6 +20,8 @@ type Cru struct {
 	Path           []string
 	List           bool
 	Update         bool
+	Serve          bool
+	Port           string
 	Bump           bool
 	NoFilename     bool
 	DryRun         bool
@@ -119,56 +121,57 @@ func Update(c *Cru, filename string) error {
 	return nil
 }
 
-func (cru *Cru) ConnectToRepository() {
-	if cru.Url != "" {
+func (c *Cru) ConnectToRepository() error {
+	if c.Url != "" {
 		var progressReporter io.Writer = os.Stderr
-		if !cru.Verbose {
+		if !c.Verbose {
 			progressReporter = &bytes.Buffer{}
 		}
-		repository, err := Clone(cru.Url, progressReporter)
+		repository, err := Clone(c.Url, progressReporter)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-		cru.repository = repository
+		c.repository = repository
 
 		wt, err := repository.Worktree()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
-		cru.workTree = wt
-		if cru.Branch != "" {
+		c.workTree = wt
+		if c.Branch != "" {
 			var branch *plumbing.Reference
 			if branches, err := repository.Branches(); err == nil {
 				branches.ForEach(func(ref *plumbing.Reference) error {
-					if ref.Name().Short() == cru.Branch {
+					if ref.Name().Short() == c.Branch {
 						branch = ref
 					}
 					return nil
 				})
 			}
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			if branch == nil {
-				log.Fatalf("ERROR: branch %s not found", cru.Branch)
+				return fmt.Errorf("ERROR: branch %s not found", c.Branch)
 			}
 			err = wt.Checkout(&git.CheckoutOptions{Branch: branch.Name()})
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 		}
-		cru.filesystem = &wt.Filesystem
-		cru.cwd = "/"
+		c.filesystem = &wt.Filesystem
+		c.cwd = "/"
 	} else {
 		cwd, err := filepath.Abs(".")
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-		cru.cwd = cwd
+		c.cwd = cwd
 		fs := osfs.New("/")
-		cru.filesystem = &fs
+		c.filesystem = &fs
 	}
+	return nil
 }
 
 func main() {
@@ -177,6 +180,7 @@ func main() {
 Usage:
   cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]] [PATH] ...
   cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru serve  [--verbose] [--dry-run] [--port=PORT] --repository=URL --branch=BRANCH [PATH] ...
 
 Options:
 --no-filename	    do not print the filename.
@@ -189,7 +193,7 @@ Options:
 --commit=MESSAGE	commit the changes with the specified message.
 --repository=URL    to read and/or update.
 --branch=BRANCH     to update.
-
+--port=PORT         to listen on, defaults to 8080 or PORT environment variable.
 `
 	cru := Cru{}
 
@@ -202,10 +206,18 @@ Options:
 		log.Fatal(err)
 	}
 
-	cru.ConnectToRepository()
+	if err = cru.ConnectToRepository(); err != nil {
+		log.Fatal(err)
+	}
+	cru.AssertPathsExists()
 	cru.imageRefs = make(ref.ContainerImageReferences, 0)
 
-	cru.AssertPathsExists()
+	if cru.Serve {
+		if cru.Url == "" {
+			log.Fatalf("cru as a service requires an git url.")
+		}
+		cru.ListenAndServe()
+	}
 
 	if cru.All {
 		if cru.Verbose {
@@ -260,7 +272,7 @@ Options:
 		if len(cru.updatedFiles) > 0 {
 			log.Printf("INFO: updated a total of %d files", len(cru.updatedFiles))
 			if cru.CommitMsg != "" {
-				if err = cru.Commit(); err != nil {
+				if _, err = cru.Commit(); err != nil {
 					log.Fatal(err)
 				}
 				if !IsLocalEndpoint(cru.Url) {

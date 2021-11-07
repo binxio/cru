@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"io"
 	"log"
@@ -10,16 +12,16 @@ import (
 	"time"
 )
 
-func (c *Cru) Commit() error {
+func (c *Cru) Commit() (hash plumbing.Hash, err error) {
 	if c.CommitMsg == "" {
-		return nil
+		return plumbing.ZeroHash, fmt.Errorf("a commit message is required")
 	}
 
 	for _, path := range c.updatedFiles {
 
-		_, err := c.workTree.Add(c.RelPath(path))
+		_, err = c.workTree.Add(c.RelPath(path))
 		if err != nil {
-			return err
+			return plumbing.ZeroHash, err
 		}
 
 		if c.Verbose {
@@ -28,7 +30,7 @@ func (c *Cru) Commit() error {
 	}
 
 	if !c.DryRun {
-		hash, err := c.workTree.Commit(c.CommitMsg, &git.CommitOptions{
+		hash, err = c.workTree.Commit(c.CommitMsg, &git.CommitOptions{
 			Author: &object.Signature{
 				Name:  "cru",
 				Email: "cru@binx.io",
@@ -38,15 +40,15 @@ func (c *Cru) Commit() error {
 		if err != nil {
 			log.Printf("ERROR: failed to commit changes, %s\n", err)
 			c.workTree.Reset(nil)
-			return err
 		}
 
 		if c.Verbose {
 			log.Printf("INFO: changes committed with %s", hash.String()[0:7])
 		}
+	} else {
+		hash = plumbing.ZeroHash
 	}
-
-	return nil
+	return
 }
 
 func (c *Cru) Push() error {
