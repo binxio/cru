@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"github.com/binxio/gcloudconfig"
 	sshconfig "github.com/kevinburke/ssh_config"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/oauth2/google"
 	"gopkg.in/src-d/go-billy.v4/memfs"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
@@ -15,64 +18,61 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net/url"
+	neturl "net/url"
 	"os"
 	"os/exec"
 	"strings"
 )
 
-func getCredentialHelper(url string) string {
-	cmd := exec.Command("git", "config", "--get-urlmatch", "credential.helper", url)
+func getCredentialHelper(url *neturl.URL) string {
+	cmd := exec.Command("git", "config", "--get-urlmatch", "credential.helper", url.String())
 	helper, err := cmd.Output()
 	if err == nil {
 		return strings.TrimSpace(string(helper))
 	}
 
-	if exiterr, ok := err.(*exec.ExitError); ok {
-		if exiterr.ExitCode() != 1 {
-			log.Fatalf("ERROR: %s returned exitcode %d", cmd.String(), exiterr.ExitCode())
+	if exitError, ok := err.(*exec.ExitError); ok {
+		if exitError.ExitCode() != 1 {
+			log.Printf("ERROR: %s returned exitcode %d", cmd.String(), exitError.ExitCode())
 		}
 	} else {
-		log.Fatalf("ERROR: %s failed %s", cmd.String(), err)
+		log.Printf("ERROR: %s failed %s", cmd.String(), err)
 	}
 	return ""
 }
 
-func getPassword(repositoryUrl string) transport.AuthMethod {
-
-	u, err := url.Parse(repositoryUrl)
-	if err != nil {
-		log.Fatalf("ERROR: url '%s' could not be parsed, %s", repositoryUrl, err)
-	}
+func getPassword(repositoryUrl *neturl.URL) (transport.AuthMethod, error) {
 
 	if os.Getenv("GIT_ASKPASS") == "" && getCredentialHelper(repositoryUrl) == "" {
 		// No credential helper specified, not passing in credentials
-		return nil
+		return nil, nil
 	}
 
-	user := u.User.Username()
-	password, _ := u.User.Password()
-
+	user := repositoryUrl.User.Username()
+	password, _ := repositoryUrl.User.Password()
+	log.Printf("protocol=%s\nhost=%s\nusername=%s\npath=%s\n",
+		repositoryUrl.Scheme, repositoryUrl.Host, user, repositoryUrl.Path)
 	cmd := exec.Command("git", "credential", "fill")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		log.Fatalf("ERROR: internal error on getPassword %s", err)
+		return nil, fmt.Errorf("ERROR: internal error on getPassword %s", err)
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		log.Fatalf("ERROR: internal error on getPassword %s", err)
+		return nil, fmt.Errorf("ERROR: internal error on getPassword %s", err)
 	}
 
 	go func() {
 		defer stdin.Close()
-		input := fmt.Sprintf("protocol=%s\nhost=%s\nusername=%s\npath=%s\n", u.Scheme, u.Host, user, u.Path)
+		input := fmt.Sprintf("protocol=%s\nhost=%s\nusername=%s\npath=%s\n",
+			repositoryUrl.Scheme, repositoryUrl.Host, user, repositoryUrl.Path)
 		io.WriteString(stdin, input)
 	}()
 
 	out, err := cmd.Output()
 	if err != nil {
 		io.Copy(os.Stderr, stderr)
-		log.Fatalf("ERROR: git credential fill failed, %s", err)
+		return nil, fmt.Errorf("ERROR: git credential fill failed, %s", err)
 	}
 
 	for _, line := range strings.Split(string(out), "\n") {
@@ -84,8 +84,36 @@ func getPassword(repositoryUrl string) transport.AuthMethod {
 			password = value[1]
 		}
 	}
+	log.Printf("curl -H 'Authorization: Bearer %s' https://www.googleapis.com/oauth2/v3/userinfo", password)
+	return &githttp.BasicAuth{Username: user, Password: password}, nil
+}
 
-	return &githttp.BasicAuth{Username: user, Password: password}
+func IsGoogleSourceRepository(url *neturl.URL) bool {
+	return url.Scheme == "https" && url.Host == "source.developers.google.com"
+}
+
+func getGoogleCredentials(url *neturl.URL) (transport.AuthMethod, error) {
+	var err error
+	var credentials *google.Credentials
+
+	if gcloudconfig.IsGCloudOnPath() {
+		credentials, err = gcloudconfig.GetCredentials("")
+	} else {
+		credentials, err = google.FindDefaultCredentials(
+			context.Background(),
+			"https://www.googleapis.com/auth/cloud-platform")
+	}
+	if err != nil {
+		return nil, err
+	}
+	token, err := credentials.TokenSource.Token()
+	if err != nil {
+		return nil, err
+	}
+	return &githttp.BasicAuth{
+		Username: url.User.Username(),
+		Password: token.AccessToken,
+	}, nil
 }
 
 func identityFileAuthentication(user string, host string) (auth transport.AuthMethod, err error) {
@@ -155,19 +183,36 @@ func sshAgentAuthentication(user, host, keyFile string, key ssh.PublicKey) (auth
 func GetAuth(url string) (auth transport.AuthMethod, plainOpen bool, err error) {
 
 	if MatchesScheme(url) {
-		if os.Getenv("GIT_ASKPASS") != "" || getCredentialHelper(url) != "" {
-			auth = getPassword(url)
+		repositoryUrl, err := neturl.Parse(url)
+		if err != nil {
+			return nil, true, err
 		}
-		return auth, false, nil
+
+		if os.Getenv("GIT_ASKPASS") != "" || getCredentialHelper(repositoryUrl) != "" {
+			auth, err = getPassword(repositoryUrl)
+			if err != nil {
+				return nil, true, err
+			}
+			return auth, false, nil
+		}
+
+		if IsGoogleSourceRepository(repositoryUrl) {
+			auth, err = getGoogleCredentials(repositoryUrl)
+			if err != nil {
+				return nil, true, err
+			}
+			return auth, false, nil
+		}
+
+		return nil, true, nil
 	}
 
 	if MatchesScpLike(url) {
 		user, host, _, _ := FindScpLikeComponents(url)
 
 		if auth, err = identityFileAuthentication(user, host); err != nil {
-			return
+			return nil, true, err
 		}
-
 	} else {
 		auth = nil
 		plainOpen = true
