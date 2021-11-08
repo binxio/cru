@@ -121,13 +121,17 @@ func Update(c *Cru, filename string) error {
 	return nil
 }
 
+func (c *Cru) ReadOnly() bool {
+	return c.List || c.DryRun
+}
+
 func (c *Cru) ConnectToRepository() error {
 	if c.Url != "" {
 		var progressReporter io.Writer = os.Stderr
 		if !c.Verbose {
 			progressReporter = &bytes.Buffer{}
 		}
-		repository, err := Clone(c.Url, progressReporter)
+		repository, err := Clone(c.Url, progressReporter, c.ReadOnly())
 		if err != nil {
 			return err
 		}
