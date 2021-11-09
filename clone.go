@@ -58,8 +58,6 @@ func getPassword(repositoryUrl *neturl.URL) (transport.AuthMethod, error) {
 
 	user := repositoryUrl.User.Username()
 	password, _ := repositoryUrl.User.Password()
-	log.Printf("protocol=%s\nhost=%s\nusername=%s\npath=%s\n",
-		repositoryUrl.Scheme, repositoryUrl.Host, user, repositoryUrl.Path)
 	cmd := exec.Command("git", "credential", "fill")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
