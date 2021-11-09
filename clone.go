@@ -25,7 +25,15 @@ import (
 )
 
 func getCredentialHelper(url *neturl.URL) string {
-	cmd := exec.Command("git", "config", "--get-urlmatch", "credential.helper", url.String())
+	git, err := exec.LookPath("git")
+	if err != nil {
+		if err != exec.ErrNotFound {
+			log.Printf("ERROR: failed to lookup git on path, %s", err)
+		}
+		return ""
+	}
+
+	cmd := exec.Command(git, "config", "--get-urlmatch", "credential.helper", url.String())
 	helper, err := cmd.Output()
 	if err == nil {
 		return strings.TrimSpace(string(helper))
