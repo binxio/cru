@@ -84,7 +84,6 @@ func getPassword(repositoryUrl *neturl.URL) (transport.AuthMethod, error) {
 			password = value[1]
 		}
 	}
-	log.Printf("curl -H 'Authorization: Bearer %s' https://www.googleapis.com/oauth2/v3/userinfo", password)
 	return &githttp.BasicAuth{Username: user, Password: password}, nil
 }
 
