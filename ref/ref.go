@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	imageReferencePattern = regexp.MustCompile(`(?P<Name>[a-zA-Z0-9\-\.]+(:[0-9]+)?/[\w\-/]+)((:(?P<Tag>[\w][\w\.-]+))|(@(?P<Digest>[a-zA-Z][a-zA-Z0-9]*:[0-9a-fA-F+\.\-_]{32,})))`)
+	imageReferencePattern = regexp.MustCompile(`(?P<Name>[a-zA-Z0-9\-\.]+(:[0-9]+)?/[\w\-/]+)((:(?P<Tag>[\w][\w\.-]+))?(@(?P<Digest>[a-zA-Z][a-zA-Z0-9]*:[0-9a-fA-F+\.\-_]{32,}))?)`)
 	submatchNames         = imageReferencePattern.SubexpNames()
 )
 

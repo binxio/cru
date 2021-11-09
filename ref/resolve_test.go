@@ -42,8 +42,11 @@ func TestImageResolve(t *testing.T) {
 }
 
 func TestImageResolves(t *testing.T) {
-	references := ContainerImageReferences{*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`),
-		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`)}
+	references := ContainerImageReferences{
+		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`),
+		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`),
+		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3`),
+	}
 
 	resolved, err := references.ResolveDigest()
 	if err != nil {
@@ -57,8 +60,12 @@ func TestImageResolves(t *testing.T) {
 		if r.Digest == "" {
 			t.Fatal("expected Digest to be set")
 		}
-		if r.Tag != "" {
-			t.Fatalf("expected Tag to be cleared, found %s", r.Tag)
+		if references[i].Digest != "" && r.Digest != references[i].Digest {
+			t.Fatal("expected digest to have remained")
+		}
+
+		if r.Tag != references[i].Tag {
+			t.Fatalf("expected Tag to be equal to original tag, found %s", r.Tag)
 		}
 		if r.Name != references[i].Name {
 			t.Fatalf("expected Name to be %s, got %s", references[i].Name, r.Name)

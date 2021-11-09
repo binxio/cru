@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+func TestRefParseWithDigest(t *testing.T) {
+	ref := MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v0.3.1@sha256:3b27ac95762ce1340a4824dc3cab2dc9d63f194f0899a0a9887402c1b1463f41`)
+	if ref.Digest != "sha256:3b27ac95762ce1340a4824dc3cab2dc9d63f194f0899a0a9887402c1b1463f41" {
+		t.Errorf("incorrect digest, %s", ref.Digest)
+	}
+}
+
 func TestUpdateReferenceSimple(t *testing.T) {
 	simple := []byte(`gcr.io/binx-io-public/paas-monitor:v0.3.1`)
 	expect := []byte(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
