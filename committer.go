@@ -25,7 +25,7 @@ func (c *Cru) Commit() (hash plumbing.Hash, err error) {
 		}
 
 		if c.Verbose {
-			log.Printf("INFO:%s added to commit\n", c.RelPath(path))
+			log.Printf("INFO: %s added to commit\n", c.RelPath(path))
 		}
 	}
 
