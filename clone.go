@@ -27,7 +27,7 @@ import (
 func getCredentialHelper(url *neturl.URL) string {
 	git, err := exec.LookPath("git")
 	if err != nil {
-		if err != exec.ErrNotFound {
+		if lookupError, ok := err.(*exec.Error); !ok || lookupError.Err != exec.ErrNotFound {
 			log.Printf("ERROR: failed to lookup git on path, %s", err)
 		}
 		return ""
