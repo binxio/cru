@@ -284,6 +284,8 @@ Options:
 						log.Fatal(err)
 					}
 				}
+			} else {
+				log.Println("INFO: no commit message, skipping commit and push")
 			}
 		} else {
 			log.Println("INFO: no files were updated by cru")
