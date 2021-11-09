@@ -14,7 +14,9 @@ type ContainerReferenceUpdateRequest struct {
 	ImageReferences []string `json:"image-references"`
 }
 
+
 type ContainerReferenceUpdateResponse struct {
+	GitURL string  `json:"git-url,omitempty"`
 	Files []string `json:"files,omitempty"`
 	Hash  string   `json:"commit-sha,omitempty"`
 }
@@ -23,6 +25,8 @@ func (c Cru) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var hash plumbing.Hash
 	var request ContainerReferenceUpdateRequest
+	var response ContainerReferenceUpdateResponse
+
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -69,12 +73,13 @@ func (c Cru) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		response = ContainerReferenceUpdateResponse{c.Url, c.updatedFiles, hash.String()}
 	} else {
 		log.Println("INFO: no files were updated by cru")
-		c.updatedFiles = make([]string, 0)
+		response = ContainerReferenceUpdateResponse{GitURL:c.Url}
 	}
-	if body, err := json.Marshal(ContainerReferenceUpdateResponse{
-		c.updatedFiles, hash.String()}); err == nil {
+
+	if body, err := json.Marshal(response); err == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(body)
 		return
