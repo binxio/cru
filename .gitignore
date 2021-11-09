@@ -1,4 +1,5 @@
 *.iml
+.terraform/
 .idea/
 cru
 x/
