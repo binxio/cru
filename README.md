@@ -125,7 +125,7 @@ The response will look like this:
 ## installation
 To install you have a number of different options:
 - download the binary from https://github.com/binxio/cru/releases
-- install using `go install github.com/binx/cru@0.9.0
+- install using `go install github.com/binx/cru@0.9.0`
 - or use the docker image: gcr.io/binx-io-public/cru:0.9.0
 
 ## Caveats
