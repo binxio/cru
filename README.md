@@ -122,6 +122,12 @@ The response will look like this:
 ```
 
 
+## installation
+To install you have a number of different options:
+- download the binary from https://github.com/binxio/cru/releases
+- install using `go install github.com/binx/cru@0.9.0
+- or use the docker image: gcr.io/binx-io-public/cru:0.9.0
+
 ## Caveats
 - cru is not context-aware: anything that looks like a container image references is updated.
 - cru will ignore any references to unqualified official images, like docker:latest or nginx:3. To update the official docker image references, prefix them with docker.io/ or docker.io/library/.
