@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/binxio/gcloudconfig"
 	sshconfig "github.com/kevinburke/ssh_config"
+	"github.com/mitchellh/go-homedir"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/oauth2/google"
 	"gopkg.in/src-d/go-billy.v4/memfs"
@@ -124,6 +125,9 @@ func getGoogleCredentials(url *neturl.URL) (transport.AuthMethod, error) {
 func identityFileAuthentication(user string, host string) (auth transport.AuthMethod, err error) {
 
 	var keyFile = sshconfig.Get(host, "IdentityFile")
+	if keyFile, err = homedir.Expand(keyFile); err != nil {
+		return nil, err
+	}
 
 	if user == "" {
 		user = sshconfig.Get(host, "User")
