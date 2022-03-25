@@ -12,9 +12,10 @@ git repository, without requiring complete write access to the repository.
 
 ## Usage
 ```
-  cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
-  cru serve  [--verbose] [--dry-run] [--port=PORT] --repository=URL --branch=BRANCH [PATH] ...
+Usage:
+  cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]  [(--username=USERNAME --email=EMAIL)] ] [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [(--username=USERNAME --email=EMAIL)] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru serve  [--verbose] [--dry-run] [--port=PORT] --repository=URL --branch=BRANCH [(--username=USERNAME --email=EMAIL)]  [PATH] ...
 ```
 
 ## Options
@@ -32,6 +33,8 @@ git repository, without requiring complete write access to the repository.
 --commit=MESSAGE    commit the changes with the specified message.
 --repository=URL    to read and/or update.
 --branch=BRANCH     to update.
+--username=USERNAME to use for the commit [default: cru].
+--email=EMAIL       to use for the commit [default: cru@binx.io].
 
 --port=PORT         to listen on, defaults to 8080 or PORT environment variable.
 ```
@@ -132,3 +135,4 @@ To install you have a number of different options:
 - cru is not context-aware: anything that looks like a container image references is updated.
 - cru will ignore any references to unqualified official images, like docker:latest or nginx:3. To update the official docker image references, prefix them with docker.io/ or docker.io/library/.
 - the time to find the alternate tag is proportional to the number of tags associated with the image.
+- the default git commit username and email is cru / cru@binx.io. It is not taken from gitconfig.

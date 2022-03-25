@@ -34,6 +34,8 @@ type Cru struct {
 	Url            string `docopt:"--repository"`
 	CommitMsg      string `docopt:"--commit"`
 	Branch         string `docopt:"--branch"`
+	Username       string
+	Email          string
 	imageRefs      ref.ContainerImageReferences
 	updatedFiles   []string
 	committedFiles []string
@@ -178,13 +180,23 @@ func (c *Cru) ConnectToRepository() error {
 	return nil
 }
 
+func (c *Cru) ApplyDefaults() {
+	if c.Username == "" {
+		c.Username = "cru"
+	}
+
+	if c.Email == "" {
+		c.Email = "cru@binx.io"
+	}
+}
+
 func main() {
 	usage := `cru - container image reference updater
 
 Usage:
-  cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
-  cru serve  [--verbose] [--dry-run] [--port=PORT] --repository=URL --branch=BRANCH [PATH] ...
+  cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]  [(--username=USERNAME --email=EMAIL)] ] [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [(--username=USERNAME --email=EMAIL)] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru serve  [--verbose] [--dry-run] [--port=PORT] --repository=URL --branch=BRANCH [(--username=USERNAME --email=EMAIL)]  [PATH] ...
 
 Options:
 --no-filename	    do not print the filename.
@@ -197,6 +209,8 @@ Options:
 --commit=MESSAGE	commit the changes with the specified message.
 --repository=URL    to read and/or update.
 --branch=BRANCH     to update.
+--username=USERNAME to use for the commit [default: cru].
+--email=EMAIL       to use for the commit [default: cru@binx.io].
 --port=PORT         to listen on, defaults to 8080 or PORT environment variable.
 `
 	cru := Cru{}
@@ -209,6 +223,7 @@ Options:
 	if err = args.Bind(&cru); err != nil {
 		log.Fatal(err)
 	}
+	cru.ApplyDefaults()
 
 	if err = cru.ConnectToRepository(); err != nil {
 		log.Fatal(err)

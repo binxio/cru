@@ -32,8 +32,8 @@ func (c *Cru) Commit() (hash plumbing.Hash, err error) {
 	if !c.DryRun {
 		hash, err = c.workTree.Commit(c.CommitMsg, &git.CommitOptions{
 			Author: &object.Signature{
-				Name:  "cru",
-				Email: "cru@binx.io",
+				Name:  c.Username,
+				Email: c.Email,
 				When:  time.Now(),
 			},
 		})
