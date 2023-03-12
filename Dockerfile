@@ -1,7 +1,7 @@
 FROM alpine:3 as ca
 RUN apk add --no-cache ca-certificates
 
-FROM 		golang:1.17 as cru
+FROM 		golang:1.19 as cru
 
 WORKDIR		/cru
 ADD		. /cru

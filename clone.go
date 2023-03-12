@@ -10,14 +10,13 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/oauth2/google"
 	"gopkg.in/src-d/go-billy.v4/memfs"
-	"gopkg.in/src-d/go-git.v4"
+	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 	"io"
-	"io/ioutil"
 	"log"
 	neturl "net/url"
 	"os"
@@ -137,7 +136,7 @@ func identityFileAuthentication(user string, host string) (auth transport.AuthMe
 		return nil, nil
 	}
 
-	key, err := ioutil.ReadFile(keyFile)
+	key, err := os.ReadFile(keyFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s, %s", keyFile, err)
 	}
