@@ -36,6 +36,7 @@ type Cru struct {
 	Branch         string `docopt:"--branch"`
 	Username       string
 	Email          string
+	MatchingTag    bool
 	imageRefs      ref.ContainerImageReferences
 	updatedFiles   []string
 	committedFiles []string
@@ -110,7 +111,7 @@ func Update(c *Cru, filename string) error {
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", c.RelPath(filename), err)
 	}
-	content, updated := ref.UpdateReferences(content, c.imageRefs, c.RelPath(filename), c.Verbose)
+	content, updated := ref.UpdateReferences(content, c.imageRefs, c.RelPath(filename), c.MatchingTag, c.Verbose)
 	if updated {
 		if !c.DryRun {
 			err := c.WriteFile(filename, content, 0644)
@@ -195,7 +196,7 @@ func main() {
 
 Usage:
   cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]  [(--username=USERNAME --email=EMAIL)] ] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [(--username=USERNAME --email=EMAIL)] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [(--username=USERNAME --email=EMAIL)] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [--matching-tag] [PATH] ...
   cru serve  [--verbose] [--dry-run] [--port=PORT] --repository=URL --branch=BRANCH [(--username=USERNAME --email=EMAIL)]  [PATH] ...
 
 Options:
@@ -205,6 +206,7 @@ Options:
 --image-reference=REFERENCE to update.
 --dry-run			pretend to run the update, make no changes.
 --all               replace all container image reference tags with "latest"
+--matching-tag      replace only image references with matching tags.
 --verbose			show more output.
 --commit=MESSAGE	commit the changes with the specified message.
 --repository=URL    to read and/or update.
@@ -246,8 +248,10 @@ Options:
 		if err != nil {
 			log.Fatalf("%s\n", err)
 		}
-		for i, _ := range cru.imageRefs {
-			cru.imageRefs[i].SetTag("latest")
+		if !cru.MatchingTag {
+			for i, _ := range cru.imageRefs {
+				cru.imageRefs[i].SetTag("latest")
+			}
 		}
 		cru.imageRefs = cru.imageRefs.RemoveDuplicates()
 		log.Printf("INFO: %d image references found\n", len(cru.imageRefs))

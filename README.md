@@ -14,7 +14,7 @@ git repository, without requiring complete write access to the repository.
 ```
 Usage:
   cru list   [--verbose] [--no-filename] [--repository=URL [--branch=BRANCH]  [(--username=USERNAME --email=EMAIL)] ] [PATH] ...
-  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [(--username=USERNAME --email=EMAIL)] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) [PATH] ...
+  cru update [--verbose] [--dry-run] [(--resolve-digest|--resolve-tag)] [--repository=URL [--branch=BRANCH] [(--username=USERNAME --email=EMAIL)] [--commit=MESSAGE]] (--all | --image-reference=REFERENCE ...) (--matching-tag) [PATH] ...
   cru serve  [--verbose] [--dry-run] [--port=PORT] --repository=URL --branch=BRANCH [(--username=USERNAME --email=EMAIL)]  [PATH] ...
 ```
 
@@ -27,6 +27,7 @@ Usage:
 
 --all               replace all container image reference tags with "latest"
 --image-reference=REFERENCE to update.
+--matching-tag      match the container image reference on the tag, not just the repository.
 --resolve-digest    change the image reference tag to a reference of the digest of the image.
 --resolve-tag       change the image reference tag to the first alternate tag of the reference.
 
@@ -92,6 +93,30 @@ If you want to update an image reference to the latest version, without knowing 
 $ cru update --image-reference gcr.io/binx-io-public/paas-monitor:latest --resolve-tag ref/resolve_test.go
 2020/07/18 22:55:32 resolving repository gcr.io/binx-io-public/paas-monitor tag 'latest' to 'v3.2.4-5-g49d6871'
 2020/07/18 22:55:32 INFO: updating ref/resolve_test.go
+```
+
+### update the digests of all container image references
+If you want to update the digests of existing container image references, type:
+```shell
+cru update --all --matching-tag --resolve-digest --verbose ref/resolve_test.go
+
+2023/07/31 13:03:25 INFO: collecting all container references
+2023/07/31 13:03:25 INFO: 3 image references found
+2023/07/31 13:03:26 resolving repository gcr.io/binx-io-public/paas-monitor Tag latest to Digest sha256:6af765830476b70cdb41d0f05e34a267f0868f56811b31a9a4d8e13c40188063
+2023/07/31 13:03:27 resolving repository mvanholsteijn/paas-monitor Tag 3.1.0 to Digest sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3
+2023/07/31 13:03:27 resolving repository mvanholsteijn/paas-monitor Tag 3.1.0 to Digest sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3
+2023/07/31 13:03:27 INFO: updating reference gcr.io/binx-io-public/paas-monitor:latest to gcr.io/binx-io-public/paas-monitor:latest@sha256:6af765830476b70cdb41d0f05e34a267f0868f56811b31a9a4d8e13c40188063 in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: updating reference gcr.io/binx-io-public/paas-monitor:latest to gcr.io/binx-io-public/paas-monitor:latest@sha256:6af765830476b70cdb41d0f05e34a267f0868f56811b31a9a4d8e13c40188063 in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: updating reference mvanholsteijn/paas-monitor:3.1.0 to mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: updating reference mvanholsteijn/paas-monitor:3.1.0 to mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: updating reference mvanholsteijn/paas-monitor:3.1.0 to mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 already up-to-date in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 already up-to-date in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 already up-to-date in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 already up-to-date in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3 already up-to-date in ref/resolve_test.go
+2023/07/31 13:03:27 INFO: updated a total of 1 files
+2023/07/31 13:03:27 INFO: no commit message, skipping commit and push
 ```
 
 ### cru-as-a-service

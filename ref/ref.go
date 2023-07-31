@@ -86,7 +86,7 @@ func FindAllContainerImageReference(content []byte) []ContainerImageReference {
 			result = append(result, *r)
 		}
 	}
-	sort.Sort(ContainerImageReferences(result))
+	sort.Sort(result)
 	return result.RemoveDuplicates()
 }
 
@@ -123,7 +123,7 @@ func (r ContainerImageReference) FindAlternateTags() ([]string, error) {
 	return result, nil
 }
 
-func UpdateReference(content []byte, reference ContainerImageReference, filename string, verbose bool) ([]byte, bool) {
+func UpdateReference(content []byte, reference ContainerImageReference, filename string, matchingTag bool, verbose bool) ([]byte, bool) {
 	previous := 0
 	updated := false
 	result := bytes.Buffer{}
@@ -131,7 +131,7 @@ func UpdateReference(content []byte, reference ContainerImageReference, filename
 	for _, match := range allMatches {
 		s := string(content[match[0]:match[1]])
 		r, err := NewContainerImageReference(s)
-		if err == nil && r.Name == reference.Name {
+		if err == nil && r.Name == reference.Name && (!matchingTag || r.Tag == reference.Tag) {
 			if r.String() != reference.String() {
 				updated = true
 				if verbose {
@@ -154,11 +154,11 @@ func UpdateReference(content []byte, reference ContainerImageReference, filename
 	return result.Bytes(), updated
 }
 
-func UpdateReferences(content []byte, references ContainerImageReferences, filename string, verbose bool) ([]byte, bool) {
+func UpdateReferences(content []byte, references ContainerImageReferences, filename string, matchingTag bool, verbose bool) ([]byte, bool) {
 	updated := false
 	changed := false
 	for _, ref := range references {
-		if content, changed = UpdateReference(content, ref, filename, verbose); changed {
+		if content, changed = UpdateReference(content, ref, filename, matchingTag, verbose); changed {
 			updated = true
 		}
 	}

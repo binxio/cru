@@ -12,6 +12,7 @@ import (
 type ContainerReferenceUpdateRequest struct {
 	CommitMessage   string   `json:"commit-message"`
 	ImageReferences []string `json:"image-references"`
+	MatchingTag     bool     `json:"matching-tag,omitEmpty"`
 }
 
 type ContainerReferenceUpdateResponse struct {
@@ -55,7 +56,7 @@ func (c Cru) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	c.MatchingTag = request.MatchingTag
 	if err = c.Walk(Update); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

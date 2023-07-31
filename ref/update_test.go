@@ -16,7 +16,7 @@ func TestUpdateReferenceSimple(t *testing.T) {
 	simple := []byte(`gcr.io/binx-io-public/paas-monitor:v0.3.1`)
 	expect := []byte(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
 	ref := MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
-	result, updated := UpdateReference(simple, *ref, "myfile.txt", true)
+	result, updated := UpdateReference(simple, *ref, "myfile.txt", false, true)
 	if !updated {
 		t.Errorf("expected the reference to be updated\n")
 	}
@@ -29,7 +29,7 @@ func TestUpdateDigestToTag(t *testing.T) {
 	simple := []byte(`gcr.io/binx-io-public/paas-monitor@sha256:4c9eeab8adf54d893450f6199f52cf7bb39264750ee2a11018dd41acfe6aeaba`)
 	expect := []byte(`gcr.io/binx-io-public/paas-monitor:latest`)
 	ref := MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:latest`)
-	result, updated := UpdateReference(simple, *ref, "myfile.txt", true)
+	result, updated := UpdateReference(simple, *ref, "myfile.txt", false, true)
 	if !updated {
 		t.Errorf("expected the reference to be updated\n")
 	}
@@ -56,7 +56,7 @@ does that work?
 	references := []ContainerImageReference{*MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v1.0.0`),
 		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`)}
 
-	result, updated := UpdateReferences(input, references, "myfile.txt", true)
+	result, updated := UpdateReferences(input, references, "myfile.txt", false, true)
 	if !updated {
 		t.Errorf("expected the references to be updated\n")
 	}
@@ -107,7 +107,26 @@ resource "google_cloud_run_service" "app" {
 }
 `)
 	ref, _ := NewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v0.3.2`)
-	result, updated := UpdateReference(input, *ref, "myfile.txt", true)
+	result, updated := UpdateReference(input, *ref, "myfile.txt", false, true)
+	if !updated {
+		t.Errorf("expected the reference to be updated\n")
+	}
+	if bytes.Compare(expect, result) != 0 {
+		t.Errorf("expected %s, got %s\n", string(expect), string(result))
+	}
+}
+
+func TestUpdateMatchingTag(t *testing.T) {
+	simple := []byte(`
+		gcr.io/binx-io-public/paas-monitor:3.4.0
+		gcr.io/binx-io-public/paas-monitor:3.5.0
+	`)
+	expect := []byte(`
+		gcr.io/binx-io-public/paas-monitor:3.4.0
+		gcr.io/binx-io-public/paas-monitor:3.5.0@sha256:6af765830476b70cdb41d0f05e34a267f0868f56811b31a9a4d8e13c40188063
+	`)
+	ref := MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:3.5.0@sha256:6af765830476b70cdb41d0f05e34a267f0868f56811b31a9a4d8e13c40188063`)
+	result, updated := UpdateReference(simple, *ref, "myfile.txt", true, true)
 	if !updated {
 		t.Errorf("expected the reference to be updated\n")
 	}
