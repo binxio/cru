@@ -19,14 +19,11 @@ func TestImageResolve(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	descriptor, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
 	if err != nil {
 		t.Fatal(err)
 	}
-	digest, err := img.Digest()
-	if err != nil {
-		t.Fatal(err)
-	}
+	digest := descriptor.Digest
 
 	if digest.String() != rr.Digest {
 		t.Fatalf("expected %s, got %s", digest, rr.Digest)

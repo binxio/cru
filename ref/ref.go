@@ -183,16 +183,12 @@ func (r ContainerImageReference) ResolveDigest() (*ContainerImageReference, erro
 		return nil, err
 	}
 
-	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
-	if err != nil {
-		return nil, err
-	}
-	digest, err := img.Digest()
+	descriptor, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Digest for %s, %s", r, err)
 	}
 
-	return &ContainerImageReference{Name: r.Name, Tag: r.Tag, Digest: digest.String()}, nil
+	return &ContainerImageReference{Name: r.Name, Tag: r.Tag, Digest: descriptor.Digest.String()}, nil
 }
 
 func (r *ContainerImageReference) SetTag(tag string) {
