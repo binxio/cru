@@ -10,7 +10,6 @@ import (
 	go_git_ssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
 )
@@ -49,7 +48,4 @@ func TestClone(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	log.Printf("%v", wt)
-
 }
