@@ -125,7 +125,8 @@ func identityFileAuthentication(user string, host string) (auth transport.AuthMe
 
 	var keyFile = sshconfig.Get(host, "IdentityFile")
 	if keyFile, err = homedir.Expand(keyFile); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ERROR: failed to expand home directory of IdentityFile %s, %s",
+			sshconfig.Get(host, "IdentityFile"), err)
 	}
 
 	if user == "" {
@@ -133,6 +134,7 @@ func identityFileAuthentication(user string, host string) (auth transport.AuthMe
 	}
 
 	if _, err = os.Stat(keyFile); os.IsNotExist(err) {
+		log.Printf("INFO: IdentityFile %s not found", keyFile)
 		return nil, nil
 	}
 
@@ -144,6 +146,8 @@ func identityFileAuthentication(user string, host string) (auth transport.AuthMe
 	signer, parseError := ssh.ParsePrivateKey(key)
 	if parseError == nil {
 		return &gitssh.PublicKeys{User: user, Signer: signer}, nil
+	} else {
+		log.Printf("WARNING: failed to parse private key from %s, %s", keyFile, err)
 	}
 
 	if missingErr, ok := parseError.(*ssh.PassphraseMissingError); ok {
@@ -153,7 +157,6 @@ func identityFileAuthentication(user string, host string) (auth transport.AuthMe
 	if publicKey, _, _, _, publicKeyParseError := ssh.ParseAuthorizedKey(key); publicKeyParseError == nil {
 		return sshAgentAuthentication(user, host, keyFile, publicKey)
 	}
-
 	return nil, fmt.Errorf("ERROR: failed to read private key from '%s', %s", keyFile, parseError)
 }
 
