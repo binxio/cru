@@ -225,6 +225,21 @@ Options:
 	if err = args.Bind(&cru); err != nil {
 		log.Fatal(err)
 	}
+
+	if cru.Url == "" {
+		if cru.CommitMsg != "" {
+			fmt.Fprint(os.Stderr, "ERROR: --repository option is required when specifying a commit message")
+			os.Exit(1)
+		}
+		if cru.Username != "" {
+			fmt.Fprint(os.Stderr, "ERROR: --repository option is required when specifying a git username")
+			os.Exit(1)
+		}
+		if cru.Email != "" {
+			fmt.Fprint(os.Stderr, "ERROR: --repository option is required when specifying a git email")
+			os.Exit(1)
+		}
+	}
 	cru.ApplyDefaults()
 
 	if err = cru.ConnectToRepository(); err != nil {
