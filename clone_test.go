@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"testing"
+
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/src-d/go-billy.v4/memfs"
 	"gopkg.in/src-d/go-git.v4"
@@ -9,13 +13,9 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	go_git_ssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
-	"io/ioutil"
-	"os"
-	"testing"
 )
 
 func TestClone(t *testing.T) {
-
 	s := fmt.Sprintf("%s/.ssh/id_rsa", os.Getenv("HOME"))
 	sshKey, err := ioutil.ReadFile(s)
 	signer, err := ssh.ParsePrivateKey([]byte(sshKey))

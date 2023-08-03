@@ -3,15 +3,16 @@ package ref
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"regexp"
+	"sort"
+	"strings"
+
 	"github.com/docker/distribution/reference"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"log"
-	"regexp"
-	"sort"
-	"strings"
 )
 
 var (
@@ -55,6 +56,7 @@ func NewContainerImageReference(imageReference string) (*ContainerImageReference
 
 	return &result, nil
 }
+
 func MustNewContainerImageReference(imageReference string) *ContainerImageReference {
 	r, err := NewContainerImageReference(imageReference)
 	if err != nil {
@@ -78,7 +80,7 @@ func (r ContainerImageReference) String() string {
 }
 
 func FindAllContainerImageReference(content []byte) []ContainerImageReference {
-	var result = make(ContainerImageReferences, 0)
+	result := make(ContainerImageReferences, 0)
 	allMatches := imageReferencePattern.FindAllIndex(content, -1)
 	for _, match := range allMatches {
 		s := string(content[match[0]:match[1]])
@@ -149,7 +151,7 @@ func UpdateReference(content []byte, reference ContainerImageReference, filename
 		}
 	}
 	if previous < len(content) {
-		result.Write(content[previous:len(content)])
+		result.Write(content[previous:])
 	}
 
 	return result.Bytes(), updated

@@ -2,12 +2,13 @@ package tag
 
 import (
 	"fmt"
-	"github.com/google/go-containerregistry/pkg/name"
 	"testing"
+
+	"github.com/google/go-containerregistry/pkg/name"
 )
 
 func TestMakeTag(t *testing.T) {
-	var outputs = []Tag{
+	outputs := []Tag{
 		{Literal: "1.15", Version: []int{1, 15}},
 		{Literal: "1.15.2", Version: []int{1, 15, 2}},
 		{Literal: "v1.15.2", Version: []int{1, 15, 2}, Prefix: "v", Category: "v|"},

@@ -3,17 +3,18 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+
 	"github.com/binxio/cru/ref"
 	"github.com/docopt/docopt-go"
 	"gopkg.in/src-d/go-billy.v4"
 	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
-	"io"
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
 )
 
 type Cru struct {
@@ -88,7 +89,6 @@ func (c *Cru) WriteFile(filename string, content []byte, perm os.FileMode) error
 }
 
 func List(c *Cru, filename string) error {
-
 	content, err := c.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("could not read %s, %s", filename, err)
@@ -114,7 +114,7 @@ func Update(c *Cru, filename string) error {
 	content, updated := ref.UpdateReferences(content, c.imageRefs, c.RelPath(filename), c.MatchingTag, c.Verbose)
 	if updated {
 		if !c.DryRun {
-			err := c.WriteFile(filename, content, 0644)
+			err := c.WriteFile(filename, content, 0o644)
 			if err != nil {
 				return fmt.Errorf("failed to overwrite %s with updated references, %s", c.RelPath(filename), err)
 			}
@@ -249,7 +249,7 @@ Options:
 			log.Fatalf("%s\n", err)
 		}
 		if !cru.MatchingTag {
-			for i, _ := range cru.imageRefs {
+			for i := range cru.imageRefs {
 				cru.imageRefs[i].SetTag("latest")
 			}
 		}

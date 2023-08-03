@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/binxio/cru/ref"
-	"gopkg.in/src-d/go-git.v4/plumbing"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/binxio/cru/ref"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 type ContainerReferenceUpdateRequest struct {
@@ -22,7 +23,6 @@ type ContainerReferenceUpdateResponse struct {
 }
 
 func (c Cru) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	var hash plumbing.Hash
 	var request ContainerReferenceUpdateRequest
 	var response ContainerReferenceUpdateResponse

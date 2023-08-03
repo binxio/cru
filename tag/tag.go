@@ -2,11 +2,12 @@ package tag
 
 import (
 	"fmt"
-	"github.com/google/go-containerregistry/pkg/crane"
-	"github.com/google/go-containerregistry/pkg/name"
 	"regexp"
 	"sort"
 	"strconv"
+
+	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/google/go-containerregistry/pkg/name"
 )
 
 type Tag struct {
@@ -25,7 +26,7 @@ var (
 )
 
 func MakeTag(tag string) Tag {
-	var result = Tag{
+	result := Tag{
 		Literal: tag,
 		Version: make([]int, 0, 3),
 	}
@@ -66,6 +67,7 @@ func compareInt(a int, b int) int {
 	}
 	return 0
 }
+
 func compareVersion(a []int, b []int) int {
 	var result int
 	for i, v := range a {
@@ -97,7 +99,6 @@ func (a Tag) Equals(b Tag) bool {
 }
 
 func ListAllTags(reference name.Reference) ([]Tag, error) {
-
 	tags, err := crane.ListTags(reference.Context().String())
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve tags for %s", reference)
@@ -111,8 +112,10 @@ func ListAllTags(reference name.Reference) ([]Tag, error) {
 	return result, nil
 }
 
-type TagList []Tag
-type TagCategories map[string]TagList
+type (
+	TagList       []Tag
+	TagCategories map[string]TagList
+)
 
 func (l TagList) FindGreaterThan(tag Tag) TagList {
 	result := make(TagList, 0)
@@ -129,7 +132,7 @@ func (a TagList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a TagList) Less(i, j int) bool { return (a[i]).Compare(a[j]) < 0 }
 
 func MakeTagCategories(tags TagList) TagCategories {
-	var result = make(map[string]TagList)
+	result := make(map[string]TagList)
 	for _, tag := range tags {
 		if list, ok := result[tag.Category]; ok {
 			result[tag.Category] = append(list, tag)

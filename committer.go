@@ -3,13 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"io"
 	"log"
 	"os"
 	"time"
+
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 func (c *Cru) Commit() (hash plumbing.Hash, err error) {
@@ -52,7 +53,6 @@ func (c *Cru) Commit() (hash plumbing.Hash, err error) {
 }
 
 func (c *Cru) Push() error {
-
 	if !c.DryRun {
 		var progress io.Writer = os.Stderr
 		if !c.Verbose {

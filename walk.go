@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/tools/godoc/util"
-	"golang.org/x/tools/godoc/vfs"
-	"gopkg.in/src-d/go-billy.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/format/gitignore"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/tools/godoc/util"
+	"golang.org/x/tools/godoc/vfs"
+	"gopkg.in/src-d/go-billy.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/format/gitignore"
 )
 
 type Visitor func(cru *Cru, path string) error
@@ -36,7 +37,6 @@ func (this BillyVFS) Open(name string) (vfs.ReadSeekCloser, error) {
 }
 
 func (c *Cru) walkFn(visitor Visitor, filename string, info os.FileInfo) error {
-
 	if info.IsDir() {
 		var patterns GitIgnorePatterns
 		patterns, err := gitignore.ReadPatterns(*c.filesystem, strings.Split(filename, "/"))

@@ -1,10 +1,11 @@
 package ref
 
 import (
+	"testing"
+
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"testing"
 )
 
 func TestImageResolve(t *testing.T) {
@@ -35,7 +36,6 @@ func TestImageResolve(t *testing.T) {
 	if digest.String() == rr.Digest {
 		t.Fatalf("expected different Digest than %s, got %s", digest, rr.Digest)
 	}
-
 }
 
 func TestImageResolves(t *testing.T) {

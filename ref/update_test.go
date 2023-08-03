@@ -53,8 +53,10 @@ not be changed.
 And how about a digest like gcr.io/binx-io-public/paas-monitor:v1.0.0?
 does that work?
 `)
-	references := []ContainerImageReference{*MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v1.0.0`),
-		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`)}
+	references := []ContainerImageReference{
+		*MustNewContainerImageReference(`gcr.io/binx-io-public/paas-monitor:v1.0.0`),
+		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`),
+	}
 
 	result, updated := UpdateReferences(input, references, "myfile.txt", false, true)
 	if !updated {

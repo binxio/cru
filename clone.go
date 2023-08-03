@@ -4,6 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log"
+	neturl "net/url"
+	"os"
+	"os/exec"
+	"strings"
+
 	"github.com/binxio/gcloudconfig"
 	sshconfig "github.com/kevinburke/ssh_config"
 	"github.com/mitchellh/go-homedir"
@@ -16,12 +23,6 @@ import (
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
-	"io"
-	"log"
-	neturl "net/url"
-	"os"
-	"os/exec"
-	"strings"
 )
 
 func getCredentialHelper(url *neturl.URL) string {
@@ -50,7 +51,6 @@ func getCredentialHelper(url *neturl.URL) string {
 }
 
 func getPassword(repositoryUrl *neturl.URL) (transport.AuthMethod, error) {
-
 	if os.Getenv("GIT_ASKPASS") == "" && getCredentialHelper(repositoryUrl) == "" {
 		// No credential helper specified, not passing in credentials
 		return nil, nil
@@ -122,8 +122,7 @@ func getGoogleCredentials(url *neturl.URL) (transport.AuthMethod, error) {
 }
 
 func identityFileAuthentication(user string, host string) (auth transport.AuthMethod, err error) {
-
-	var keyFile = sshconfig.Get(host, "IdentityFile")
+	keyFile := sshconfig.Get(host, "IdentityFile")
 	if keyFile, err = homedir.Expand(keyFile); err != nil {
 		return nil, fmt.Errorf("ERROR: failed to expand home directory of IdentityFile %s, %s",
 			sshconfig.Get(host, "IdentityFile"), err)
@@ -192,7 +191,6 @@ func sshAgentAuthentication(user, host, keyFile string, key ssh.PublicKey) (auth
 }
 
 func GetAuth(url string) (auth transport.AuthMethod, plainOpen bool, err error) {
-
 	if MatchesScheme(url) {
 		repositoryUrl, err := neturl.Parse(url)
 		if err != nil {
