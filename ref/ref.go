@@ -3,6 +3,7 @@ package ref
 import (
 	"bytes"
 	"fmt"
+	"github.com/docker/distribution/reference"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -178,7 +179,21 @@ func (r ContainerImageReferences) RemoveDuplicates() []ContainerImageReference {
 }
 
 func (r ContainerImageReference) ResolveDigest() (*ContainerImageReference, error) {
-	ref, err := name.ParseReference(r.String())
+	var baseReference string
+	parts := reference.ReferenceRegexp.FindStringSubmatch(r.String())
+
+	if len(parts) < 2 {
+		// this is highly unlikely as `r` is a correct container image reference
+		return nil, fmt.Errorf("invalid container image reference %s", r.String())
+	}
+
+	if len(parts) >= 3 && parts[2] != "" {
+		baseReference = fmt.Sprintf("%s:%s", parts[1], parts[2])
+	} else {
+		baseReference = parts[1]
+	}
+
+	ref, err := name.ParseReference(baseReference)
 	if err != nil {
 		return nil, err
 	}

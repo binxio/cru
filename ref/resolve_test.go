@@ -41,8 +41,10 @@ func TestImageResolve(t *testing.T) {
 func TestImageResolves(t *testing.T) {
 	references := ContainerImageReferences{
 		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`),
-		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0`),
 		*MustNewContainerImageReference(`mvanholsteijn/paas-monitor:3.1.0@sha256:c0717cab955aff0a3d2f6bb975808ba9708d8385bcf01a18e23ff436f07c1fb3`),
+		*MustNewContainerImageReference(`docker.io/library/alpine:latest@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`),
+		*MustNewContainerImageReference(`docker.io/library/alpine:latest`),
+		*MustNewContainerImageReference(`docker.io/library/alpine@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`),
 	}
 
 	resolved, err := references.ResolveDigest()
@@ -57,8 +59,8 @@ func TestImageResolves(t *testing.T) {
 		if r.Digest == "" {
 			t.Fatal("expected Digest to be set")
 		}
-		if references[i].Digest != "" && r.Digest != references[i].Digest {
-			t.Fatal("expected digest to have remained")
+		if references[i].Tag != "" && r.Tag != references[i].Tag {
+			t.Fatal("expected tag to have remained")
 		}
 
 		if r.Tag != references[i].Tag {
