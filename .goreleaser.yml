@@ -1,3 +1,4 @@
+---
 before:
   hooks:
     - go mod download
@@ -17,3 +18,19 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+brews:
+  - tap:
+      owner: binxio
+      name: homebrew-cru
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    homepage: 'https://github.com/binxio/cru'
+    description: 'utility to update container image references'
+    folder: formula
+    commit_author:
+      name: Mark van Holsteijn
+      email: mark.van.holsteijn@gmail.com
+    install: |-
+      bin.install "cru"
+    test: |
+      system "#{bin}/cru --help"
