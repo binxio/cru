@@ -45,6 +45,7 @@ func TestImageResolves(t *testing.T) {
 		*MustNewContainerImageReference(`docker.io/library/alpine:latest@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`),
 		*MustNewContainerImageReference(`docker.io/library/alpine:latest`),
 		*MustNewContainerImageReference(`docker.io/library/alpine@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`),
+		*MustNewContainerImageReference(`docker.io/localstack/localstack:3`),
 	}
 
 	resolved, err := references.ResolveDigest()
