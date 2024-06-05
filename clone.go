@@ -197,6 +197,15 @@ func GetAuth(url string) (auth transport.AuthMethod, plainOpen bool, err error) 
 			return nil, true, err
 		}
 
+		if repositoryUrl.User != nil {
+			if password, isSet := repositoryUrl.User.Password(); isSet {
+				return &githttp.BasicAuth{
+					Username: repositoryUrl.User.Username(),
+					Password: password,
+				}, false, nil
+			}
+		}
+
 		if os.Getenv("GIT_ASKPASS") != "" || getCredentialHelper(repositoryUrl) != "" {
 			auth, err = getPassword(repositoryUrl)
 			if err != nil {
@@ -257,7 +266,6 @@ func Clone(url string, progress io.Writer, readOnly bool) (r *git.Repository, er
 			Auth:     auth,
 			Depth:    2,
 		})
-
 		if err != nil {
 			return nil, err
 		}
