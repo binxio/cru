@@ -9,7 +9,7 @@ require (
 	github.com/google/go-containerregistry v0.16.1
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
-	golang.org/x/crypto v0.21.0
+	golang.org/x/crypto v0.28.0
 	golang.org/x/oauth2 v0.14.0
 	golang.org/x/tools v0.15.0
 	gopkg.in/src-d/go-billy.v4 v4.3.2
@@ -40,7 +40,7 @@ require (
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
