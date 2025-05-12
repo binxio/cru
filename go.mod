@@ -1,6 +1,7 @@
 module github.com/binxio/cru
 
-go 1.20
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -10,9 +11,9 @@ require (
 	github.com/google/go-containerregistry v0.20.3
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
-	golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.38.0
 	golang.org/x/oauth2 v0.28.0
-	golang.org/x/tools v0.31.0
+	golang.org/x/tools v0.33.0
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
@@ -35,8 +36,8 @@ require (
 	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/vbatts/tar-split v0.11.6 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
