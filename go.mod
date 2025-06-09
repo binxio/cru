@@ -11,7 +11,7 @@ require (
 	github.com/google/go-containerregistry v0.20.5
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
-	golang.org/x/crypto v0.38.0
+	golang.org/x/crypto v0.39.0
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/tools v0.33.0
 	gopkg.in/src-d/go-billy.v4 v4.3.2
