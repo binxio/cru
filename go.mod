@@ -12,7 +12,7 @@ require (
 	github.com/kevinburke/ssh_config v1.4.0
 	github.com/mitchellh/go-homedir v1.1.0
 	golang.org/x/crypto v0.42.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 	golang.org/x/tools/godoc v0.1.0-deprecated
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
