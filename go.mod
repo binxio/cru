@@ -13,7 +13,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	golang.org/x/crypto v0.42.0
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/tools v0.36.0
+	golang.org/x/tools/godoc v0.1.0-deprecated
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
@@ -36,8 +36,8 @@ require (
 	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
