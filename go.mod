@@ -11,7 +11,7 @@ require (
 	github.com/google/go-containerregistry v0.20.6
 	github.com/kevinburke/ssh_config v1.4.0
 	github.com/mitchellh/go-homedir v1.1.0
-	golang.org/x/crypto v0.43.0
+	golang.org/x/crypto v0.44.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/tools/godoc v0.1.0-deprecated
 	gopkg.in/src-d/go-billy.v4 v4.3.2
@@ -36,8 +36,8 @@ require (
 	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/net v0.45.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
