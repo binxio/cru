@@ -9,7 +9,7 @@ require (
 	github.com/docker/distribution v2.8.3+incompatible
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/google/go-containerregistry v0.20.7
-	github.com/kevinburke/ssh_config v1.4.0
+	github.com/kevinburke/ssh_config v1.6.0
 	github.com/mitchellh/go-homedir v1.1.0
 	golang.org/x/crypto v0.48.0
 	golang.org/x/oauth2 v0.35.0
